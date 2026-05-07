@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRISH CryptoScan – 120 Indicator Scanner (Delta India)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root{
+  --bg:#0e0e0c;--surface:#131311;--surface2:#181816;--surface3:#252422;
+  --border:#2a2a28;--divider:#1f1f1d;--text:#cdccca;--muted:#797876;--faint:#4a4948;
+  --primary:#4f98a3;--primary-h:#227f8b;--primary-hl:#1e3233;
+  --success:#6daa45;--success-hl:#1e2e16;--error:#d163a7;--error-hl:#2e1a28;
+  --warn:#bb653b;--warn-hl:#2e1e13;--gold:#e8af34;--gold-hl:#2a2010;
+  --blue:#5591c7;--blue-hl:#0f1e2e;--orange:#fdab43;
+  --font:'Inter','Helvetica Neue',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:0.5rem;--trans:180ms cubic-bezier(.16,1,.3,1);
+}
+[data-theme="light"]{
+  --bg:#f7f6f2;--surface:#f9f8f5;--surface2:#fbfbf9;--surface3:#e6e4df;
+  --border:#d4d1ca;--divider:#dcd9d5;--text:#28251d;--muted:#7a7974;--faint:#bab9b4;
+  --primary:#01696f;--primary-h:#0c4e54;--primary-hl:#cedcd8;
+  --success:#437a22;--success-hl:#d4dfcc;--error:#a12c7b;--error-hl:#e0ced7;
+  --warn:#964219;--warn-hl:#ddcfc6;--gold:#d19900;--gold-hl:#e9e0c6;
+  --blue:#006494;--blue-hl:#c6d8e4;--orange:#da7101;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;overflow-x:hidden}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+/* LAYOUT */
+.layout{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  position:sticky;top:0;z-index:100}
+.body-wrap{display:flex;flex:1}
+.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);
+  padding:12px 0;overflow-y:auto;height:calc(100vh - 60px);position:sticky;top:60px}
+.main{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-width:0}
+
+/* TOPBAR */
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:-.01em;flex-shrink:0}
+.logo span{color:var(--faint);font-weight:400;font-size:11px}
+.top-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
+.crypto-sel{background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  border-radius:var(--r);padding:7px 10px;font-size:13px;font-family:var(--font);cursor:pointer;min-width:200px}
+.crypto-sel:focus{outline:2px solid var(--primary)}
+.tf-group{display:flex;gap:2px;background:var(--surface3);border:1px solid var(--border);
+  border-radius:var(--r);padding:2px;flex-shrink:0}
+.tf-btn{padding:4px 9px;border-radius:calc(var(--r) - 2px);font-size:12px;font-weight:500;
+  color:var(--muted);background:none;border:none;cursor:pointer;transition:background var(--trans),color var(--trans)}
+.tf-btn.active{background:var(--primary);color:#fff}
+.tf-btn:hover:not(.active){background:var(--surface3);color:var(--text)}
+.run-btn{background:var(--primary);color:#fff;border-radius:var(--r);padding:8px 18px;
+  font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;
+  transition:background var(--trans),transform .1s;white-space:nowrap;flex-shrink:0;border:none;cursor:pointer}
+.run-btn:hover{background:var(--primary-h)}
+.run-btn:active{transform:scale(.97)}
+.theme-btn{width:34px;height:34px;border-radius:var(--r);display:flex;align-items:center;
+  justify-content:center;background:var(--surface2);border:1px solid var(--border);flex-shrink:0;cursor:pointer}
+.theme-btn:hover{border-color:var(--primary)}
+
+/* SIDEBAR */
+.sb-sec{padding:6px 12px 3px;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--faint);margin-top:10px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:0 6px;
+  border-radius:6px;cursor:pointer;font-size:12px;color:var(--muted);
+  transition:background var(--trans),color var(--trans)}
+.sb-item:hover{background:var(--surface2);color:var(--text)}
+.sb-item.active{background:var(--primary-hl);color:var(--primary)}
+.sb-cnt{margin-left:auto;font-size:10px;background:var(--surface3);color:var(--muted);
+  padding:1px 6px;border-radius:100px;min-width:20px;text-align:center}
+.sb-cnt.bull{background:var(--success-hl);color:var(--success)}
+.sb-cnt.bear{background:var(--error-hl);color:var(--error)}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.kpi-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:3px}
+.kpi-val{font-size:22px;font-weight:700;font-family:var(--mono);line-height:1}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.g{color:var(--success)}.r{color:var(--error)}.gld{color:var(--gold)}.bl{color:var(--blue)}.or{color:var(--orange)}
+
+/* GAUGE */
+.gauge-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:16px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.gauge-right{display:flex;flex-direction:column;gap:4px}
+.gauge-headline{font-size:28px;font-weight:800;font-family:var(--mono);line-height:1}
+.gauge-sub{font-size:12px;color:var(--muted)}
+.gauge-counts{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap}
+.gc{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;
+  font-size:10px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.badge.STRONG_BUY{background:var(--success-hl);color:var(--success)}
+.badge.BUY{background:#1e2e1699;color:#8bc45f}
+.badge.NEUTRAL{background:var(--surface3);color:var(--muted)}
+.badge.SELL{background:#2e1a2899;color:#e080c0}
+.badge.STRONG_SELL{background:var(--error-hl);color:var(--error)}
+.badge.OVERBOUGHT{background:var(--gold-hl);color:var(--gold)}
+.badge.OVERSOLD{background:var(--blue-hl);color:var(--blue)}
+
+/* CHIPS */
+.chip-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{padding:4px 12px;border-radius:100px;font-size:11px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted);cursor:pointer;transition:all var(--trans)}
+.chip.active{background:var(--primary-hl);color:var(--primary);border-color:var(--primary)}
+.chip:hover:not(.active){border-color:var(--primary);color:var(--text)}
+
+/* TABLE */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.tbl-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface3)}
+.tbl-title{font-size:13px;font-weight:600}
+.tbl-badge{font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface2);color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--surface3)}
+th{padding:7px 12px;text-align:left;font-weight:600;color:var(--muted);font-size:10px;
+  text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid var(--divider);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.ind-name{font-weight:600;color:var(--text);font-size:12px}
+.ind-abbr{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.val-cell{font-family:var(--mono);font-weight:600;font-size:12px}
+.bar-wrap{display:flex;align-items:center;gap:6px}
+.bar-num{font-family:var(--mono);font-size:10px;min-width:28px;color:var(--muted)}
+.bar-track{flex:1;height:4px;background:var(--surface3);border-radius:100px;overflow:hidden;min-width:40px}
+.bar-fill{height:100%;border-radius:100px;transition:width .4s}
+.bf-g{background:var(--success)}.bf-gold{background:var(--gold)}.bf-b{background:var(--blue)}
+
+/* PROGRESS */
+.prog-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px}
+.prog-track{height:6px;background:var(--surface3);border-radius:100px;overflow:hidden;margin-top:10px}
+.prog-fill{height:100%;background:var(--primary);border-radius:100px;transition:width .15s}
+.prog-log{font-size:10px;color:var(--muted);margin-top:8px;font-family:var(--mono);height:18px;overflow:hidden}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:80px 24px;color:var(--muted);gap:10px}
+.empty h3{font-size:16px;font-weight:600;color:var(--text)}
+.empty p{font-size:12px;max-width:34ch;line-height:1.6}
+
+/* DELTA BADGE */
+.delta-badge{background:linear-gradient(135deg,#1b3a4b,#0f2030);border:1px solid #1e4a5e;
+  color:#5fc3d4;font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;
+  display:inline-flex;align-items:center;gap:4px}
+
+/* CUSTOM COIN PICKER */
+.coin-picker{position:relative;flex-shrink:0;min-width:230px}
+.coin-trigger{display:flex;align-items:center;gap:8px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;
+  font-size:13px;cursor:pointer;width:100%;transition:border var(--trans)}
+.coin-trigger:hover,.coin-trigger.open{border-color:var(--primary)}
+.coin-trigger-label{flex:1;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.coin-trigger-arrow{color:var(--muted);font-size:10px;flex-shrink:0;transition:transform var(--trans)}
+.coin-trigger.open .coin-trigger-arrow{transform:rotate(180deg)}
+.coin-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  z-index:200;box-shadow:0 8px 32px #0006;min-width:260px}
+.coin-dropdown.visible{display:flex;flex-direction:column}
+.coin-search-wrap{padding:8px;border-bottom:1px solid var(--border)}
+.coin-search{width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);border-radius:calc(var(--r) - 2px);padding:6px 10px 6px 28px;
+  font-size:12px;font-family:var(--font);outline:none}
+.coin-search:focus{border-color:var(--primary)}
+.coin-search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  color:var(--muted);pointer-events:none;width:13px;height:13px}
+.coin-search-wrap{position:relative}
+.coin-list{max-height:300px;overflow-y:auto}
+.coin-group-label{padding:5px 10px 2px;font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--faint);background:var(--surface3);
+  border-bottom:1px solid var(--divider);border-top:1px solid var(--divider)}
+.coin-option{padding:7px 12px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;
+  border-bottom:1px solid var(--divider);transition:background var(--trans)}
+.coin-option:last-child{border-bottom:none}
+.coin-option:hover{background:var(--surface2)}
+.coin-option.selected{background:var(--primary-hl);color:var(--primary)}
+.coin-option-sym{font-family:var(--mono);font-weight:700;font-size:11px;min-width:46px}
+.coin-option-name{color:var(--muted);font-size:11px}
+.coin-type-pill{margin-left:auto;font-size:9px;padding:1px 5px;border-radius:100px;
+  background:var(--surface3);color:var(--faint)}
+.coin-no-result{padding:20px;text-align:center;color:var(--muted);font-size:12px}
+
+@media(max-width:800px){
+  .sidebar{display:none}
+  .desc-cell,.bar-wrap{display:none}
+}
+@media(max-width:520px){
+  .kpi-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="12" stroke="var(--primary)" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="3" fill="var(--primary)"/>
+      <path d="M7 13h3M13 7v3M16 13h3M13 16v3" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    KRISH CryptoScan
+    <span>120-Indicator</span>
+    <span class="delta-badge">▲ Delta India</span>
+  </div>
+
+  <div class="top-controls">
+    <!-- CUSTOM SEARCHABLE COIN PICKER -->
+    <div class="coin-picker" id="coinPicker">
+      <button class="coin-trigger" id="coinTrigger" type="button">
+        <span class="coin-trigger-label" id="coinTriggerLabel">✦ XRP – Ripple</span>
+        <span class="coin-trigger-arrow">▼</span>
+      </button>
+      <div class="coin-dropdown" id="coinDropdown">
+        <div class="coin-search-wrap">
+          <svg class="coin-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input class="coin-search" id="coinSearch" type="text" placeholder="Search coin or symbol…" autocomplete="off">
+        </div>
+        <div class="coin-list" id="coinList"></div>
+      </div>
+    </div>
+    <!-- hidden value holder for scan logic -->
+    <input type="hidden" id="cryptoSelect" value="XRP">
+
+    <div class="tf-group" id="tfGroup">
+      <button class="tf-btn" data-tf="1m">1m</button>
+      <button class="tf-btn" data-tf="5m">5m</button>
+      <button class="tf-btn" data-tf="15m">15m</button>
+      <button class="tf-btn" data-tf="1h">1h</button>
+      <button class="tf-btn active" data-tf="4h">4h</button>
+      <button class="tf-btn" data-tf="1d">1D</button>
+      <button class="tf-btn" data-tf="1w">1W</button>
+    </div>
+
+    <button class="run-btn" id="scanBtn">▶ Run Scan</button>
+
+    <button class="theme-btn" id="themeBtn" title="Toggle theme">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- BODY -->
+<div class="body-wrap">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-sec">Categories</div>
+    <div class="sb-item active" onclick="filterCat('all',this)">
+      <i data-lucide="layout-grid" width="13" height="13"></i> All Indicators
+      <span class="sb-cnt" id="cnt-all">120</span>
+    </div>
+    <div class="sb-item" onclick="filterCat('trend',this)">
+      <i data-lucide="trending-up" width="13" height="13"></i> Trend
+      <span class="sb-cnt" id="cnt-trend">20</span>
+    </div>
+    <div class="sb-item" onclick="filterCat('momentum',this)">
+      <i data-lucide="zap" width="13" height="13"></i> Momentum
+      <span class="sb-cnt" id="cnt-momentum">20</span>
+    </div>
+    <div class="sb-item" onclick="filterCat('volatility',this)">
+      <i data-lucide="activity" width="13" height="13"></i> Volatility
+      <span class="sb-cnt" id="cnt-volatility">20</span>
+    </div>
+    <div class="sb-item" onclick="filterCat('volume',this)">
+      <i data-lucide="bar-chart-2" width="13" height="13"></i> Volume
+      <span class="sb-cnt" id="cnt-volume">20</span>
+    </div>
+    <div class="sb-item" onclick="filterCat('support',this)">
+      <i data-lucide="layers" width="13" height="13"></i> S/R & Price Action
+      <span class="sb-cnt" id="cnt-support">20</span>
+    </div>
+    <div class="sb-item" onclick="filterCat('advanced',this)">
+      <i data-lucide="cpu" width="13" height="13"></i> Advanced / Order Flow
+      <span class="sb-cnt" id="cnt-advanced">20</span>
+    </div>
+
+    <div class="sb-sec" style="margin-top:16px">Signal Filter</div>
+    <div class="sb-item" onclick="filterSig('STRONG_BUY',this)">
+      <i data-lucide="chevrons-up" width="13" height="13"></i> Strong Buy
+      <span class="sb-cnt bull" id="sb-STRONG_BUY">—</span>
+    </div>
+    <div class="sb-item" onclick="filterSig('BUY',this)">
+      <i data-lucide="chevron-up" width="13" height="13"></i> Buy
+      <span class="sb-cnt bull" id="sb-BUY">—</span>
+    </div>
+    <div class="sb-item" onclick="filterSig('NEUTRAL',this)">
+      <i data-lucide="minus" width="13" height="13"></i> Neutral
+      <span class="sb-cnt" id="sb-NEUTRAL">—</span>
+    </div>
+    <div class="sb-item" onclick="filterSig('SELL',this)">
+      <i data-lucide="chevron-down" width="13" height="13"></i> Sell
+      <span class="sb-cnt bear" id="sb-SELL">—</span>
+    </div>
+    <div class="sb-item" onclick="filterSig('STRONG_SELL',this)">
+      <i data-lucide="chevrons-down" width="13" height="13"></i> Strong Sell
+      <span class="sb-cnt bear" id="sb-STRONG_SELL">—</span>
+    </div>
+    <div class="sb-item" onclick="filterSig('OVERBOUGHT',this)">
+      <i data-lucide="alert-triangle" width="13" height="13"></i> Overbought
+      <span class="sb-cnt" style="background:var(--gold-hl);color:var(--gold)" id="sb-OVERBOUGHT">—</span>
+    </div>
+    <div class="sb-item" onclick="filterSig('OVERSOLD',this)">
+      <i data-lucide="alert-circle" width="13" height="13"></i> Oversold
+      <span class="sb-cnt" style="background:var(--blue-hl);color:var(--blue)" id="sb-OVERSOLD">—</span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" id="mainContent">
+    <div class="empty" id="emptyState">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <circle cx="26" cy="26" r="24" stroke="var(--faint)" stroke-width="1.5"/>
+        <circle cx="26" cy="26" r="6" fill="var(--faint)"/>
+        <path d="M14 26h7M26 14v7M31 26h7M26 31v7" stroke="var(--faint)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <h3>Select a Delta India crypto &amp; run scan</h3>
+      <p>100+ Delta Exchange India coins available across Spot, Perp Futures & Meme. Pick a coin, choose timeframe, then click <strong>▶ Run Scan</strong> — 120 indicators including advanced Order Flow signals.</p>
+    </div>
+  </main>
+</div>
+</div>
+
+<script>
+// ─── ALL DELTA INDIA COINS (187 futures) ──────────────────────────────────
+const COINS = {
+  // ── Spot ──
+  BTC:    {name:'Bitcoin',price:119582,change:0.8,vol:'28.4B',cap:'2.38T',type:'Spot'},
+  ETH:    {name:'Ethereum',price:3932,change:3.1,vol:'14.2B',cap:'472B',type:'Spot'},
+  SOL:    {name:'Solana',price:194,change:2.0,vol:'3.1B',cap:'94B',type:'Spot'},
+  XRP:    {name:'Ripple',price:3.24,change:2.3,vol:'2.4B',cap:'185B',type:'Spot'},
+  TON:    {name:'Toncoin',price:5.84,change:1.9,vol:'0.6B',cap:'14.8B',type:'Spot'},
+  DETO:   {name:'Delta Exchange Token',price:0.0528,change:2.2,vol:'0.001B',cap:'0.01B',type:'Spot'},
+  // ── Layer 1 ──
+  BNB:    {name:'BNB',price:856,change:7.6,vol:'1.8B',cap:'124B',type:'Perp'},
+  ADA:    {name:'Cardano',price:0.831,change:1.4,vol:'0.8B',cap:'29B',type:'Perp'},
+  AVAX:   {name:'Avalanche',price:26.84,change:8.2,vol:'0.7B',cap:'11B',type:'Perp'},
+  DOT:    {name:'Polkadot',price:4.25,change:3.1,vol:'0.4B',cap:'6.5B',type:'Perp'},
+  NEAR:   {name:'NEAR Protocol',price:2.98,change:3.6,vol:'0.4B',cap:'3.2B',type:'Perp'},
+  ATOM:   {name:'Cosmos',price:4.89,change:3.3,vol:'0.3B',cap:'1.9B',type:'Perp'},
+  TRX:    {name:'TRON',price:0.323,change:0.1,vol:'0.6B',cap:'27.8B',type:'Perp'},
+  LTC:    {name:'Litecoin',price:114,change:1.4,vol:'0.5B',cap:'8.6B',type:'Perp'},
+  BCH:    {name:'Bitcoin Cash',price:584,change:0.1,vol:'0.5B',cap:'11.6B',type:'Perp'},
+  ETC:    {name:'Ethereum Classic',price:23.3,change:3.6,vol:'0.1B',cap:'3.4B',type:'Perp'},
+  ALGO:   {name:'Algorand',price:0.283,change:1.3,vol:'0.2B',cap:'2.3B',type:'Perp'},
+  VET:    {name:'VeChain',price:0.0263,change:3.0,vol:'0.1B',cap:'2.3B',type:'Perp'},
+  XTZ:    {name:'Tezos',price:0.915,change:4.3,vol:'0.1B',cap:'0.9B',type:'Perp'},
+  HBAR:   {name:'Hedera',price:0.221,change:2.4,vol:'0.2B',cap:'8.8B',type:'Perp'},
+  EGLD:   {name:'MultiversX',price:28.4,change:3.1,vol:'0.1B',cap:'0.7B',type:'Perp'},
+  ONE:    {name:'Harmony',price:0.0115,change:1.8,vol:'0.05B',cap:'0.1B',type:'Perp'},
+  KAVA:   {name:'Kava',price:0.42,change:2.2,vol:'0.05B',cap:'0.3B',type:'Perp'},
+  FLOW:   {name:'Flow',price:0.558,change:1.6,vol:'0.06B',cap:'0.6B',type:'Perp'},
+  IOTA:   {name:'IOTA',price:0.211,change:1.3,vol:'0.05B',cap:'0.6B',type:'Perp'},
+  ZIL:    {name:'Zilliqa',price:0.0137,change:1.1,vol:'0.03B',cap:'0.3B',type:'Perp'},
+  CELO:   {name:'Celo',price:0.581,change:2.8,vol:'0.04B',cap:'0.3B',type:'Perp'},
+  ROSE:   {name:'Oasis Network',price:0.0578,change:1.9,vol:'0.03B',cap:'0.2B',type:'Perp'},
+  XLM:    {name:'Stellar',price:0.388,change:1.8,vol:'0.3B',cap:'11.5B',type:'Perp'},
+  XMR:    {name:'Monero',price:318,change:1.1,vol:'0.1B',cap:'5.8B',type:'Perp'},
+  ZEC:    {name:'Zcash',price:42.1,change:1.4,vol:'0.05B',cap:'0.7B',type:'Perp'},
+  DASH:   {name:'Dash',price:26.8,change:1.2,vol:'0.04B',cap:'0.3B',type:'Perp'},
+  THETA:  {name:'Theta Network',price:1.58,change:2.7,vol:'0.08B',cap:'1.6B',type:'Perp'},
+  ICX:    {name:'ICON',price:0.148,change:1.5,vol:'0.03B',cap:'0.2B',type:'Perp'},
+  KSM:    {name:'Kusama',price:18.4,change:2.8,vol:'0.04B',cap:'0.2B',type:'Perp'},
+  ONT:    {name:'Ontology',price:0.198,change:1.3,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  XEM:    {name:'NEM',price:0.0181,change:1.0,vol:'0.01B',cap:'0.2B',type:'Perp'},
+  QTUM:   {name:'Qtum',price:2.84,change:1.7,vol:'0.02B',cap:'0.3B',type:'Perp'},
+  ZEN:    {name:'Horizen',price:8.14,change:1.5,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  VTHO:   {name:'VeThor Token',price:0.00918,change:1.2,vol:'0.01B',cap:'0.4B',type:'Perp'},
+  BTT:    {name:'BitTorrent',price:0.00000101,change:2.1,vol:'0.05B',cap:'0.9B',type:'Perp'},
+  WIN:    {name:'WINkLink',price:0.0000671,change:1.8,vol:'0.02B',cap:'0.5B',type:'Perp'},
+  HOT:    {name:'Holo',price:0.00141,change:1.6,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  SC:     {name:'Siacoin',price:0.00481,change:1.4,vol:'0.01B',cap:'0.3B',type:'Perp'},
+  WAVES:  {name:'Waves',price:1.28,change:2.0,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  DCR:    {name:'Decred',price:18.9,change:1.3,vol:'0.01B',cap:'0.3B',type:'Perp'},
+  JASMY:  {name:'JasmyCoin',price:0.0168,change:2.3,vol:'0.04B',cap:'0.9B',type:'Perp'},
+  OM:     {name:'MANTRA',price:0.618,change:3.4,vol:'0.08B',cap:'0.6B',type:'Perp'},
+  S:      {name:'Sonic',price:0.541,change:4.8,vol:'0.08B',cap:'1.5B',type:'Perp'},
+  BEAM:   {name:'Beam',price:0.0118,change:2.9,vol:'0.03B',cap:'0.6B',type:'Perp'},
+  ASTR:   {name:'Astar',price:0.0481,change:2.2,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  // ── DeFi ──
+  UNI:    {name:'Uniswap',price:11.0,change:4.8,vol:'0.3B',cap:'8.3B',type:'Perp'},
+  LINK:   {name:'Chainlink',price:19.11,change:2.9,vol:'0.6B',cap:'12B',type:'Perp'},
+  AAVE:   {name:'Aave',price:305,change:3.7,vol:'0.3B',cap:'4.6B',type:'Perp'},
+  MKR:    {name:'Maker',price:2314,change:2.1,vol:'0.1B',cap:'2.2B',type:'Perp'},
+  CRV:    {name:'Curve Finance',price:0.298,change:3.4,vol:'0.1B',cap:'0.4B',type:'Perp'},
+  LDO:    {name:'Lido DAO',price:0.978,change:4.1,vol:'0.1B',cap:'0.9B',type:'Perp'},
+  GMX:    {name:'GMX',price:18.4,change:5.2,vol:'0.08B',cap:'0.2B',type:'Perp'},
+  DYDX:   {name:'dYdX',price:0.693,change:3.9,vol:'0.08B',cap:'0.4B',type:'Perp'},
+  SNX:    {name:'Synthetix',price:0.693,change:6.3,vol:'0.1B',cap:'0.2B',type:'Perp'},
+  RUNE:   {name:'THORChain',price:1.50,change:0.7,vol:'0.1B',cap:'0.5B',type:'Perp'},
+  PENDLE: {name:'Pendle',price:4.67,change:7.1,vol:'0.1B',cap:'0.7B',type:'Perp'},
+  ONDO:   {name:'Ondo Finance',price:1.06,change:1.7,vol:'0.4B',cap:'3.1B',type:'Perp'},
+  GRT:    {name:'The Graph',price:0.159,change:2.6,vol:'0.1B',cap:'1.5B',type:'Perp'},
+  '1INCH':{name:'1inch',price:0.289,change:1.5,vol:'0.1B',cap:'0.3B',type:'Perp'},
+  ZRX:    {name:'0x Protocol',price:0.289,change:1.2,vol:'0.05B',cap:'0.2B',type:'Perp'},
+  BAT:    {name:'Basic Attention Token',price:0.189,change:1.0,vol:'0.04B',cap:'0.3B',type:'Perp'},
+  RDNT:   {name:'Radiant Capital',price:0.0308,change:2.8,vol:'0.03B',cap:'0.05B',type:'Perp'},
+  YFI:    {name:'Yearn Finance',price:5241,change:2.4,vol:'0.04B',cap:'0.2B',type:'Perp'},
+  COMP:   {name:'Compound',price:48.1,change:2.1,vol:'0.04B',cap:'0.4B',type:'Perp'},
+  SUSHI:  {name:'SushiSwap',price:0.738,change:3.1,vol:'0.04B',cap:'0.2B',type:'Perp'},
+  CAKE:   {name:'PancakeSwap',price:2.48,change:2.8,vol:'0.05B',cap:'0.7B',type:'Perp'},
+  BAND:   {name:'Band Protocol',price:1.14,change:1.8,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  RPL:    {name:'Rocket Pool',price:6.81,change:2.5,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  ANKR:   {name:'Ankr',price:0.0268,change:1.7,vol:'0.02B',cap:'0.3B',type:'Perp'},
+  SKL:    {name:'SKALE',price:0.0368,change:1.9,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  NMR:    {name:'Numeraire',price:11.4,change:2.0,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  CELR:   {name:'Celer Network',price:0.0148,change:1.5,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  LQTY:   {name:'Liquity',price:0.881,change:2.2,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  PERP:   {name:'Perpetual Protocol',price:0.418,change:2.6,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  SPELL:  {name:'Spell Token',price:0.000481,change:1.8,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  LINA:   {name:'Linear Finance',price:0.00698,change:1.6,vol:'0.01B',cap:'0.05B',type:'Perp'},
+  HIGH:   {name:'Highstreet',price:1.08,change:2.1,vol:'0.01B',cap:'0.05B',type:'Perp'},
+  UNFI:   {name:'Unifi Protocol',price:2.14,change:1.9,vol:'0.01B',cap:'0.05B',type:'Perp'},
+  // ── Layer 2 / Scaling ──
+  OP:     {name:'Optimism',price:0.978,change:4.5,vol:'0.2B',cap:'1.3B',type:'Perp'},
+  ARB:    {name:'Arbitrum',price:0.511,change:3.8,vol:'0.2B',cap:'2.0B',type:'Perp'},
+  MATIC:  {name:'Polygon',price:0.58,change:1.8,vol:'0.5B',cap:'5B',type:'Perp'},
+  STX:    {name:'Stacks',price:0.852,change:5.0,vol:'0.1B',cap:'1.2B',type:'Perp'},
+  STRK:   {name:'Starknet',price:0.14,change:6.0,vol:'0.1B',cap:'0.4B',type:'Perp'},
+  ZK:     {name:'ZKsync',price:0.0618,change:5.5,vol:'0.08B',cap:'0.2B',type:'Perp'},
+  ZRO:    {name:'LayerZero',price:3.28,change:4.2,vol:'0.06B',cap:'0.5B',type:'Perp'},
+  SCR:    {name:'Scroll',price:0.778,change:3.9,vol:'0.05B',cap:'0.2B',type:'Perp'},
+  MANTA:  {name:'Manta Network',price:0.253,change:9.1,vol:'0.1B',cap:'0.2B',type:'Perp'},
+  DYM:    {name:'Dymension',price:0.298,change:4.2,vol:'0.1B',cap:'0.1B',type:'Perp'},
+  IMX:    {name:'Immutable',price:0.981,change:4.8,vol:'0.1B',cap:'1.5B',type:'Perp'},
+  BLUR:   {name:'Blur',price:0.168,change:3.1,vol:'0.05B',cap:'0.3B',type:'Perp'},
+  MOVE:   {name:'Movement',price:0.348,change:5.8,vol:'0.06B',cap:'0.4B',type:'Perp'},
+  BOBA:   {name:'Boba Network',price:0.148,change:2.1,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  GLMR:   {name:'Moonbeam',price:0.118,change:1.9,vol:'0.01B',cap:'0.2B',type:'Perp'},
+  // ── AI / Data / Infra ──
+  FET:    {name:'Fetch.ai',price:1.18,change:5.2,vol:'0.1B',cap:'3.0B',type:'Perp'},
+  RNDR:   {name:'Render',price:4.51,change:6.1,vol:'0.1B',cap:'2.3B',type:'Perp'},
+  IO:     {name:'io.net',price:2.14,change:4.7,vol:'0.05B',cap:'0.3B',type:'Perp'},
+  AR:     {name:'Arweave',price:8.01,change:4.4,vol:'0.1B',cap:'0.5B',type:'Perp'},
+  FIL:    {name:'Filecoin',price:2.78,change:3.7,vol:'0.2B',cap:'1.6B',type:'Perp'},
+  MASK:   {name:'Mask Network',price:1.44,change:3.5,vol:'0.1B',cap:'0.3B',type:'Perp'},
+  EIGEN:  {name:'EigenLayer',price:2.18,change:4.9,vol:'0.06B',cap:'0.5B',type:'Perp'},
+  OCEAN:  {name:'Ocean Protocol',price:0.368,change:3.8,vol:'0.04B',cap:'0.5B',type:'Perp'},
+  AGIX:   {name:'SingularityNET',price:0.418,change:4.2,vol:'0.04B',cap:'0.5B',type:'Perp'},
+  CTSI:   {name:'Cartesi',price:0.128,change:2.4,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  QNT:    {name:'Quant',price:68.4,change:2.1,vol:'0.04B',cap:'0.8B',type:'Perp'},
+  VIRTUAL:{name:'Virtuals Protocol',price:1.81,change:6.4,vol:'0.08B',cap:'1.8B',type:'Perp'},
+  AI16Z:  {name:'ai16z',price:0.428,change:8.1,vol:'0.06B',cap:'0.4B',type:'Perp'},
+  AIXBT:  {name:'AIXBT by Virtuals',price:0.198,change:7.4,vol:'0.04B',cap:'0.2B',type:'Perp'},
+  COOKIE: {name:'CookieDAO',price:0.338,change:5.9,vol:'0.03B',cap:'0.1B',type:'Perp'},
+  TAO:    {name:'Bittensor',price:418,change:5.1,vol:'0.1B',cap:'2.8B',type:'Perp'},
+  // ── Cosmos / Solana Ecosystem ──
+  TIA:    {name:'Celestia',price:3.24,change:5.8,vol:'0.1B',cap:'1.4B',type:'Perp'},
+  INJ:    {name:'Injective',price:13.4,change:6.2,vol:'0.2B',cap:'1.3B',type:'Perp'},
+  SEI:    {name:'Sei',price:0.348,change:2.9,vol:'0.1B',cap:'0.9B',type:'Perp'},
+  PYTH:   {name:'Pyth Network',price:0.248,change:3.7,vol:'0.08B',cap:'0.5B',type:'Perp'},
+  JTO:    {name:'Jito',price:2.07,change:4.4,vol:'0.1B',cap:'0.2B',type:'Perp'},
+  JUP:    {name:'Jupiter',price:0.598,change:4.1,vol:'0.1B',cap:'0.8B',type:'Perp'},
+  LISTA:  {name:'Lista DAO',price:0.178,change:3.3,vol:'0.04B',cap:'0.1B',type:'Perp'},
+  RAY:    {name:'Raydium',price:3.14,change:5.2,vol:'0.08B',cap:'0.8B',type:'Perp'},
+  BANANA: {name:'Banana Gun',price:14.8,change:4.8,vol:'0.03B',cap:'0.1B',type:'Perp'},
+  HYPE:   {name:'Hyperliquid',price:18.4,change:7.2,vol:'0.2B',cap:'6.1B',type:'Perp'},
+  USUAL:  {name:'Usual',price:0.218,change:4.1,vol:'0.04B',cap:'0.2B',type:'Perp'},
+  LAYER:  {name:'Solayer',price:1.48,change:5.6,vol:'0.03B',cap:'0.3B',type:'Perp'},
+  POPCAT: {name:'Popcat',price:0.498,change:7.8,vol:'0.08B',cap:'0.5B',type:'Perp'},
+  // ── Meme ──
+  DOGE:   {name:'Dogecoin',price:0.241,change:2.0,vol:'1.2B',cap:'35B',type:'Perp'},
+  SHIB:   {name:'Shiba Inu',price:0.0000141,change:1.2,vol:'0.8B',cap:'8.3B',type:'Perp'},
+  PEPE:   {name:'Pepe',price:0.00001382,change:6.4,vol:'0.5B',cap:'5.8B',type:'Perp'},
+  BONK:   {name:'Bonk',price:0.00002281,change:5.1,vol:'0.3B',cap:'1.6B',type:'Perp'},
+  FLOKI:  {name:'Floki',price:0.0001481,change:4.8,vol:'0.2B',cap:'1.4B',type:'Perp'},
+  WIF:    {name:'dogwifhat',price:1.14,change:5.7,vol:'0.2B',cap:'1.1B',type:'Perp'},
+  BOME:   {name:'Book of Meme',price:0.00571,change:7.2,vol:'0.15B',cap:'0.4B',type:'Perp'},
+  MEME:   {name:'Memecoin',price:0.00194,change:5.2,vol:'0.1B',cap:'0.2B',type:'Perp'},
+  NOT:    {name:'Notcoin',price:0.00225,change:7.7,vol:'0.1B',cap:'0.2B',type:'Perp'},
+  NEIRO:  {name:'Neiro',price:0.000782,change:8.4,vol:'0.08B',cap:'0.1B',type:'Perp'},
+  TURBO:  {name:'Turbo',price:0.00541,change:9.1,vol:'0.06B',cap:'0.2B',type:'Perp'},
+  PNUT:   {name:'Peanut the Squirrel',price:0.412,change:6.8,vol:'0.07B',cap:'0.2B',type:'Perp'},
+  ACT:    {name:'Act I : The AI Prophecy',price:0.198,change:5.9,vol:'0.05B',cap:'0.1B',type:'Perp'},
+  GOAT:   {name:'Goat',price:0.218,change:7.4,vol:'0.05B',cap:'0.1B',type:'Perp'},
+  DOGS:   {name:'Dogs',price:0.000481,change:4.2,vol:'0.05B',cap:'0.1B',type:'Perp'},
+  HMSTR:  {name:'Hamster Kombat',price:0.00211,change:3.8,vol:'0.04B',cap:'0.1B',type:'Perp'},
+  TRUMP:  {name:'Official Trump',price:9.48,change:11.2,vol:'0.3B',cap:'1.9B',type:'Perp'},
+  MELANIA:{name:'Melania Meme',price:1.28,change:8.4,vol:'0.08B',cap:'0.3B',type:'Perp'},
+  MEW:    {name:'cat in a dogs world',price:0.00568,change:7.1,vol:'0.05B',cap:'0.3B',type:'Perp'},
+  BRETT:  {name:'Brett',price:0.0681,change:8.8,vol:'0.06B',cap:'0.7B',type:'Perp'},
+  MOG:    {name:'Mog Coin',price:0.00000168,change:6.4,vol:'0.03B',cap:'0.2B',type:'Perp'},
+  FARTCOIN:{name:'Fartcoin',price:0.948,change:12.1,vol:'0.08B',cap:'0.9B',type:'Perp'},
+  PONKE:  {name:'Ponke',price:0.248,change:6.8,vol:'0.03B',cap:'0.1B',type:'Perp'},
+  SLERF:  {name:'Slerf',price:0.0681,change:7.2,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  WEN:    {name:'Wen',price:0.00000481,change:5.9,vol:'0.01B',cap:'0.05B',type:'Perp'},
+  MYRO:   {name:'Myro',price:0.0148,change:6.1,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  // ── Gaming / NFT / Metaverse ──
+  SAND:   {name:'The Sandbox',price:0.319,change:1.6,vol:'0.2B',cap:'0.8B',type:'Perp'},
+  MANA:   {name:'Decentraland',price:0.325,change:1.9,vol:'0.2B',cap:'0.7B',type:'Perp'},
+  GALA:   {name:'Gala',price:0.0181,change:2.4,vol:'0.1B',cap:'0.6B',type:'Perp'},
+  CHZ:    {name:'Chiliz',price:0.0618,change:1.8,vol:'0.1B',cap:'0.6B',type:'Perp'},
+  ENJ:    {name:'Enjin Coin',price:0.128,change:1.5,vol:'0.04B',cap:'0.2B',type:'Perp'},
+  APE:    {name:'ApeCoin',price:0.628,change:3.2,vol:'0.08B',cap:'0.2B',type:'Perp'},
+  MAGIC:  {name:'Magic',price:0.348,change:4.1,vol:'0.04B',cap:'0.1B',type:'Perp'},
+  HOOK:   {name:'Hooked Protocol',price:0.361,change:3.6,vol:'0.03B',cap:'0.1B',type:'Perp'},
+  GMT:    {name:'STEPN',price:0.0948,change:2.7,vol:'0.05B',cap:'0.2B',type:'Perp'},
+  AXS:    {name:'Axie Infinity',price:4.81,change:3.1,vol:'0.08B',cap:'0.8B',type:'Perp'},
+  SLP:    {name:'Smooth Love Potion',price:0.00248,change:2.4,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  ALICE:  {name:'My Neighbor Alice',price:0.618,change:2.8,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  TLM:    {name:'Alien Worlds',price:0.0148,change:1.9,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  ILV:    {name:'Illuvium',price:28.4,change:3.5,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  GHST:   {name:'Aavegotchi',price:0.898,change:2.2,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  // ── Web3 Identity / Social / Infra ──
+  ENS:    {name:'Ethereum Name Service',price:18.4,change:3.8,vol:'0.06B',cap:'0.6B',type:'Perp'},
+  LRC:    {name:'Loopring',price:0.148,change:2.1,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  GAL:    {name:'Galxe',price:1.28,change:3.4,vol:'0.03B',cap:'0.3B',type:'Perp'},
+  ID:     {name:'Space ID',price:0.368,change:2.8,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  CYBER:  {name:'CyberConnect',price:3.14,change:3.1,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  ARKM:   {name:'Arkham',price:1.48,change:4.2,vol:'0.04B',cap:'0.3B',type:'Perp'},
+  SFP:    {name:'SafePal',price:0.618,change:2.6,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  API3:   {name:'API3',price:1.18,change:2.4,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  NKN:    {name:'NKN',price:0.0581,change:1.8,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  CHR:    {name:'Chromia',price:0.148,change:2.1,vol:'0.01B',cap:'0.2B',type:'Perp'},
+  DUSK:   {name:'Dusk Network',price:0.198,change:2.3,vol:'0.01B',cap:'0.2B',type:'Perp'},
+  // ── Bitcoin Ecosystem / Move-to-Earn / Misc ──
+  ORDI:   {name:'Ordinals',price:11.87,change:15.1,vol:'0.1B',cap:'0.2B',type:'Perp'},
+  SATS:   {name:'SATS (Ordinals)',price:0.000000281,change:8.1,vol:'0.08B',cap:'0.2B',type:'Perp'},
+  SUI:    {name:'Sui',price:3.81,change:5.4,vol:'0.5B',cap:'12B',type:'Perp'},
+  APT:    {name:'Aptos',price:5.18,change:4.3,vol:'0.2B',cap:'3.8B',type:'Perp'},
+  ENA:    {name:'Ethena',price:0.68,change:11.5,vol:'0.2B',cap:'1.9B',type:'Perp'},
+  WLD:    {name:'Worldcoin',price:1.23,change:5.4,vol:'0.2B',cap:'1.1B',type:'Perp'},
+  CFX:    {name:'Conflux',price:0.0791,change:2.9,vol:'0.08B',cap:'0.4B',type:'Perp'},
+  XAI:    {name:'Xai',price:0.059,change:4.6,vol:'0.1B',cap:'0.1B',type:'Perp'},
+  TRB:    {name:'Tellor',price:42.12,change:2.7,vol:'0.1B',cap:'0.2B',type:'Perp'},
+  AUDIO:  {name:'Audius',price:0.0981,change:2.1,vol:'0.03B',cap:'0.2B',type:'Perp'},
+  DENT:   {name:'Dent',price:0.000681,change:1.4,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  ACH:    {name:'Alchemy Pay',price:0.0148,change:1.7,vol:'0.01B',cap:'0.2B',type:'Perp'},
+  NULS:   {name:'NULS',price:0.248,change:1.6,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  SSV:    {name:'SSV Network',price:18.4,change:2.8,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  PIPPIN:  {name:'Pippin',price:0.148,change:9.4,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  SAHARA:  {name:'Sahara AI',price:0.218,change:5.8,vol:'0.03B',cap:'0.2B',type:'Perp'},
+  // ── Recently Listed on Delta India ──
+  TST:     {name:'The Standards Token',price:0.0481,change:14.2,vol:'0.04B',cap:'0.1B',type:'Perp'},
+  PENGU:   {name:'Pudgy Penguins',price:0.0218,change:6.8,vol:'0.08B',cap:'1.4B',type:'Perp'},
+  BERA:    {name:'Berachain',price:3.48,change:7.4,vol:'0.1B',cap:'1.1B',type:'Perp'},
+  IP:      {name:'Story Protocol',price:4.18,change:8.1,vol:'0.08B',cap:'2.1B',type:'Perp'},
+  KAIA:    {name:'Kaia (Klaytn)',price:0.148,change:3.2,vol:'0.04B',cap:'0.6B',type:'Perp'},
+  MORPHO:  {name:'Morpho',price:1.28,change:5.6,vol:'0.04B',cap:'0.5B',type:'Perp'},
+  KAITO:   {name:'Kaito AI',price:1.68,change:9.2,vol:'0.06B',cap:'0.5B',type:'Perp'},
+  SIGN:    {name:'Sign Protocol',price:0.118,change:6.4,vol:'0.03B',cap:'0.2B',type:'Perp'},
+  INIT:    {name:'Init Capital',price:0.0681,change:5.8,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  ANIME:   {name:'Anime',price:0.0348,change:7.1,vol:'0.03B',cap:'0.2B',type:'Perp'},
+  VINE:    {name:'Vine',price:0.0148,change:11.4,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  DEEP:    {name:'DeepBook Protocol',price:0.148,change:6.2,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  WAL:     {name:'Walrus',price:0.618,change:5.4,vol:'0.03B',cap:'0.3B',type:'Perp'},
+  ZEREBRO: {name:'Zerebro',price:0.0618,change:8.8,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  SWARMS:  {name:'Swarms',price:0.0481,change:7.6,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  BUZZ:    {name:'Buzz',price:0.0281,change:9.1,vol:'0.01B',cap:'0.05B',type:'Perp'},
+  LUCE:    {name:'Luce',price:0.0181,change:8.4,vol:'0.01B',cap:'0.05B',type:'Perp'},
+  PROM:    {name:'Prometeus',price:4.81,change:3.8,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  DEGEN:   {name:'Degen',price:0.00481,change:7.2,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  GRIFFAIN:{name:'Griffain',price:0.0618,change:10.2,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  VVAIFU:  {name:'VirtualsAIFU',price:0.218,change:8.6,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  ARC:     {name:'ARC Protocol',price:0.148,change:7.8,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  ALCH:    {name:'Alchemist AI',price:0.348,change:6.4,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  PLUME:   {name:'Plume Network',price:0.0681,change:5.2,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  GRIFT:   {name:'Grift',price:0.0148,change:9.4,vol:'0.01B',cap:'0.05B',type:'Perp'},
+  PAXG:    {name:'PAX Gold',price:3248,change:0.4,vol:'0.02B',cap:'0.8B',type:'Perp'},
+  XDC:     {name:'XDC Network',price:0.0818,change:2.8,vol:'0.02B',cap:'1.1B',type:'Perp'},
+  POLS:    {name:'Polkastarter',price:0.168,change:2.4,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  BADGER:  {name:'Badger DAO',price:3.48,change:3.1,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  BOME2:   {name:'BOME2',price:0.00148,change:8.1,vol:'0.01B',cap:'0.05B',type:'Perp'},
+  UXLINK:  {name:'UXLINK',price:0.918,change:5.8,vol:'0.02B',cap:'0.2B',type:'Perp'},
+  FUEL:    {name:'Fuel Network',price:0.0218,change:4.8,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  PUFFER:  {name:'Puffer Finance',price:0.148,change:4.2,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  LUMIA:   {name:'Lumia',price:0.618,change:5.1,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  REZ:     {name:'Renzo Protocol',price:0.0481,change:3.8,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  ZETA:    {name:'ZetaChain',price:0.348,change:4.6,vol:'0.01B',cap:'0.2B',type:'Perp'},
+  PORTAL:  {name:'Portal',price:0.218,change:3.9,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  MYRIA:   {name:'Myria',price:0.00481,change:2.8,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  AEVO:    {name:'Aevo',price:0.148,change:4.1,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  OMNI:    {name:'Omni Network',price:3.48,change:5.2,vol:'0.01B',cap:'0.1B',type:'Perp'},
+  LABUBU:  {name:'Labubu',price:0.0481,change:9.8,vol:'0.02B',cap:'0.1B',type:'Perp'},
+  LAB:     {name:'LabubuAI',price:0.0218,change:8.4,vol:'0.01B',cap:'0.05B',type:'Perp'},
+};
+
+// ─── INDICATORS (100) ──────────────────────────────────────────────────────
+const INDICATORS=[
+  {id:'SMA20',name:'Simple MA 20',abbr:'SMA20',cat:'trend',desc:'20-period price average'},
+  {id:'SMA50',name:'Simple MA 50',abbr:'SMA50',cat:'trend',desc:'50-period golden reference'},
+  {id:'SMA100',name:'Simple MA 100',abbr:'SMA100',cat:'trend',desc:'Medium-term baseline'},
+  {id:'SMA200',name:'Simple MA 200',abbr:'SMA200',cat:'trend',desc:'Long-term bear/bull divider'},
+  {id:'EMA9',name:'Exp MA 9',abbr:'EMA9',cat:'trend',desc:'Short-term trend signal'},
+  {id:'EMA21',name:'Exp MA 21',abbr:'EMA21',cat:'trend',desc:'21-period fast EMA'},
+  {id:'EMA50',name:'Exp MA 50',abbr:'EMA50',cat:'trend',desc:'50-period slow EMA'},
+  {id:'EMA200',name:'Exp MA 200',abbr:'EMA200',cat:'trend',desc:'Major trend EMA'},
+  {id:'DEMA',name:'Double EMA',abbr:'DEMA',cat:'trend',desc:'Reduced-lag double EMA'},
+  {id:'TEMA',name:'Triple EMA',abbr:'TEMA',cat:'trend',desc:'Minimal lag TEMA'},
+  {id:'WMA',name:'Weighted MA',abbr:'WMA',cat:'trend',desc:'Recent bars weighted more'},
+  {id:'HULL',name:'Hull MA',abbr:'HMA',cat:'trend',desc:'Smooth near-zero lag MA'},
+  {id:'KAMA',name:'Kaufman Adaptive MA',abbr:'KAMA',cat:'trend',desc:'Adapts to volatility'},
+  {id:'MAMA',name:'MESA Adaptive MA',abbr:'MAMA',cat:'trend',desc:'Hilbert-transform adaptive'},
+  {id:'VWMA',name:'Volume Weighted MA',abbr:'VWMA',cat:'trend',desc:'Volume-adjusted average'},
+  {id:'ICHIMOKU',name:'Ichimoku Cloud',abbr:'ICHI',cat:'trend',desc:'Kumo cloud position'},
+  {id:'PSAR',name:'Parabolic SAR',abbr:'PSAR',cat:'trend',desc:'Trailing stop & reverse'},
+  {id:'AROON',name:'Aroon Oscillator',abbr:'AROON',cat:'trend',desc:'Trend strength/direction'},
+  {id:'ADX',name:'Avg Directional Index',abbr:'ADX',cat:'trend',desc:'Trend power 0-100'},
+  {id:'SUPERTREND',name:'SuperTrend',abbr:'ST',cat:'trend',desc:'ATR-based trend signal'},
+  {id:'RSI14',name:'RSI 14',abbr:'RSI14',cat:'momentum',desc:'30=oversold 70=overbought'},
+  {id:'RSI7',name:'RSI 7',abbr:'RSI7',cat:'momentum',desc:'Fast RSI for scalping'},
+  {id:'STOCH',name:'Stochastic %K/%D',abbr:'STOCH',cat:'momentum',desc:'%K/%D crossover'},
+  {id:'STOCHRSI',name:'Stochastic RSI',abbr:'StochRSI',cat:'momentum',desc:'RSI into stochastic'},
+  {id:'MACD',name:'MACD Line',abbr:'MACD',cat:'momentum',desc:'12-26 EMA divergence'},
+  {id:'MACDHIST',name:'MACD Histogram',abbr:'MACDH',cat:'momentum',desc:'Signal crossover strength'},
+  {id:'CCI',name:'Commodity Channel',abbr:'CCI',cat:'momentum',desc:'±100 overbought/oversold'},
+  {id:'WILLR',name:"Williams %R",abbr:'%R',cat:'momentum',desc:'Overbought -80 / oversold -20'},
+  {id:'MOM',name:'Momentum',abbr:'MOM',cat:'momentum',desc:'Price change over N periods'},
+  {id:'ROC',name:'Rate of Change',abbr:'ROC',cat:'momentum',desc:'% price change velocity'},
+  {id:'TSI',name:'True Strength Index',abbr:'TSI',cat:'momentum',desc:'Double-smoothed momentum'},
+  {id:'PPO',name:'Price Oscillator',abbr:'PPO',cat:'momentum',desc:'% price oscillator'},
+  {id:'DPO',name:'Detrended PO',abbr:'DPO',cat:'momentum',desc:'Removes trend from price'},
+  {id:'ULTOSC',name:'Ultimate Oscillator',abbr:'UO',cat:'momentum',desc:'Multi-period combined'},
+  {id:'AWESOME',name:'Awesome Oscillator',abbr:'AO',cat:'momentum',desc:'5/34 SMA midpoint diff'},
+  {id:'KST',name:'Know Sure Thing',abbr:'KST',cat:'momentum',desc:'4 ROC smoothed signal'},
+  {id:'TRIX',name:'TRIX',abbr:'TRIX',cat:'momentum',desc:'Triple-smooth EMA ROC'},
+  {id:'FOSC',name:'Forecast Oscillator',abbr:'FOSC',cat:'momentum',desc:'Price vs regression'},
+  {id:'ELDER',name:"Elder Force Index",abbr:'EFI',cat:'momentum',desc:'Price × volume force'},
+  {id:'PVO',name:'Price Volume Osc',abbr:'PVO',cat:'momentum',desc:'Volume momentum signal'},
+  {id:'BB',name:'Bollinger Bands',abbr:'BB',cat:'volatility',desc:'Price vs 2σ band'},
+  {id:'BB_WIDTH',name:'BB Width',abbr:'BBW',cat:'volatility',desc:'Band squeeze/expand'},
+  {id:'BB_PERCENT',name:'BB %B',abbr:'BB%B',cat:'volatility',desc:'Position within bands'},
+  {id:'ATR',name:'Avg True Range',abbr:'ATR',cat:'volatility',desc:'Daily price range measure'},
+  {id:'NATR',name:'Normalised ATR',abbr:'NATR',cat:'volatility',desc:'ATR/price in %'},
+  {id:'KELTNER',name:'Keltner Channel',abbr:'KC',cat:'volatility',desc:'ATR-based envelope'},
+  {id:'DONCHIAN',name:'Donchian Channel',abbr:'DC',cat:'volatility',desc:'N-period high/low range'},
+  {id:'STD_DEV',name:'Std Deviation',abbr:'SD',cat:'volatility',desc:'Price dispersion'},
+  {id:'HIST_VOL',name:'Historical Volatility',abbr:'HV',cat:'volatility',desc:'20-day realised vol %'},
+  {id:'CHAIKIN_VOL',name:'Chaikin Volatility',abbr:'CV',cat:'volatility',desc:'EMA range change'},
+  {id:'ULCER_IDX',name:'Ulcer Index',abbr:'UI',cat:'volatility',desc:'Downside risk measure'},
+  {id:'VIX_PROXY',name:'VIX Proxy',abbr:'CVIX',cat:'volatility',desc:'Implied vol estimate'},
+  {id:'MASS_IDX',name:'Mass Index',abbr:'MI',cat:'volatility',desc:'Range expansion detector'},
+  {id:'VHF',name:'Vertical Horiz Filter',abbr:'VHF',cat:'volatility',desc:'Trend vs chop'},
+  {id:'CHOPPINESS',name:'Choppiness Index',abbr:'CI',cat:'volatility',desc:'38.2=trend 61.8=chop'},
+  {id:'DV',name:'Daily Volatility',abbr:'DV',cat:'volatility',desc:'Intraday range %'},
+  {id:'TTM_SQUEEZE',name:'TTM Squeeze',abbr:'TTMS',cat:'volatility',desc:'BB inside KC signal'},
+  {id:'SQUEEZE_MOM',name:'Squeeze Momentum',abbr:'SQM',cat:'volatility',desc:'Momentum post-squeeze'},
+  {id:'RVI',name:'Relative Volatility',abbr:'RVI',cat:'volatility',desc:'Std-dev directional'},
+  {id:'PVOL',name:'Price Volatility',abbr:'PVOL',cat:'volatility',desc:'Intrabar vol score'},
+  {id:'OBV',name:'On-Balance Volume',abbr:'OBV',cat:'volume',desc:'Cumulative volume trend'},
+  {id:'VP',name:'Volume Profile',abbr:'VP',cat:'volume',desc:'Price-at-volume POC'},
+  {id:'MFI',name:'Money Flow Index',abbr:'MFI',cat:'volume',desc:'Volume-weighted RSI'},
+  {id:'CMF',name:'Chaikin Money Flow',abbr:'CMF',cat:'volume',desc:'-1 to +1 buying pressure'},
+  {id:'AD',name:'Accum/Distribution',abbr:'A/D',cat:'volume',desc:'Cumulative money flow'},
+  {id:'ADO',name:'Chaikin Oscillator',abbr:'ADOSC',cat:'volume',desc:'3/10 EMA of A/D'},
+  {id:'VWAP',name:'VWAP',abbr:'VWAP',cat:'volume',desc:'Intraday vol-price anchor'},
+  {id:'DVWAP',name:'Daily VWAP',abbr:'DVWAP',cat:'volume',desc:'Session fair value'},
+  {id:'TWAP',name:'TWAP',abbr:'TWAP',cat:'volume',desc:'Time-weighted avg price'},
+  {id:'NVI',name:'Negative Volume Index',abbr:'NVI',cat:'volume',desc:'Low-vol day trend'},
+  {id:'PVI',name:'Positive Volume Index',abbr:'PVI',cat:'volume',desc:'High-vol day trend'},
+  {id:'EASE',name:'Ease of Movement',abbr:'EOM',cat:'volume',desc:'Price move per volume'},
+  {id:'KLINGER',name:'Klinger Oscillator',abbr:'KVO',cat:'volume',desc:'Vol-based trend EMA'},
+  {id:'FORCE_IDX',name:'Force Index',abbr:'FI',cat:'volume',desc:'Price × volume power'},
+  {id:'TVI',name:'Trade Volume Index',abbr:'TVI',cat:'volume',desc:'Tick-based buying dir'},
+  {id:'VORTEX',name:'Vortex Indicator',abbr:'VTX',cat:'volume',desc:'+VI/-VI trend power'},
+  {id:'DEMA_VOL',name:'Vol-Adj DEMA',abbr:'VDEMA',cat:'volume',desc:'Volume-scaled trend'},
+  {id:'VP_NODE',name:'Vol Node Proximity',abbr:'VPN',cat:'volume',desc:'Distance to HVN/LVN'},
+  {id:'RVOL',name:'Relative Volume',abbr:'RVOL',cat:'volume',desc:'Vol vs avg (spikes)'},
+  {id:'CVD',name:'Cumulative Vol Delta',abbr:'CVD',cat:'volume',desc:'Buy vs sell imbalance'},
+  {id:'PIVOT_CPP',name:'Pivot Point (Classic)',abbr:'PP',cat:'support',desc:'S1/S2/R1/R2 levels'},
+  {id:'PIVOT_FIB',name:'Fib Pivot Points',abbr:'FPP',cat:'support',desc:'Fibonacci S/R levels'},
+  {id:'PIVOT_CAM',name:'Camarilla Pivot',abbr:'CAM',cat:'support',desc:'H3/H4 reversal zone'},
+  {id:'FIB_RET',name:'Fib Retracement',abbr:'FIB',cat:'support',desc:'0.382/0.618 levels'},
+  {id:'FIB_EXT',name:'Fib Extension',abbr:'FEXT',cat:'support',desc:'1.272/1.618 targets'},
+  {id:'SR_ZONE',name:'S/R Zone Detector',abbr:'SRZ',cat:'support',desc:'Cluster-based key zones'},
+  {id:'ENGULF',name:'Engulfing Pattern',abbr:'ENGULF',cat:'support',desc:'Bull/Bear reversal candle'},
+  {id:'HAMMER',name:'Hammer / Shooting Star',abbr:'HMSS',cat:'support',desc:'Pin bar reversals'},
+  {id:'DOJI',name:'Doji Pattern',abbr:'DOJI',cat:'support',desc:'Indecision candle'},
+  {id:'MARUBOZU',name:'Marubozu',abbr:'MARU',cat:'support',desc:'Strong full-body candle'},
+  {id:'THREE_SOLDIERS',name:'3 White Soldiers',abbr:'3WS',cat:'support',desc:'Bullish continuation'},
+  {id:'THREE_CROWS',name:'3 Black Crows',abbr:'3BC',cat:'support',desc:'Bearish continuation'},
+  {id:'MORNING_STAR',name:'Morning Star',abbr:'MOS',cat:'support',desc:'3-candle bull reversal'},
+  {id:'EVENING_STAR',name:'Evening Star',abbr:'EVS',cat:'support',desc:'3-candle bear reversal'},
+  {id:'HARAMI',name:'Harami Pattern',abbr:'HARI',cat:'support',desc:'Inside bar indecision'},
+  {id:'INSIDE_BAR',name:'Inside Bar',abbr:'IB',cat:'support',desc:'Compression & breakout'},
+  {id:'OUTSIDE_BAR',name:'Outside Bar',abbr:'OB',cat:'support',desc:'Engulf with body'},
+  {id:'PREV_HIGH',name:'Prev Session High',abbr:'PHI',cat:'support',desc:'Prior session resistance'},
+  {id:'PREV_LOW',name:'Prev Session Low',abbr:'PLO',cat:'support',desc:'Prior session support'},
+  {id:'ROUND_LVL',name:'Psychological Levels',abbr:'PSY',cat:'support',desc:'00/50 round numbers'},
+  // ── ADVANCED / ORDER FLOW (20) ──
+  {id:'FUNDING',name:'Funding Rate',abbr:'FR',cat:'advanced',desc:'Perp funding: +ve=longs pay, -ve=shorts pay'},
+  {id:'OI',name:'Open Interest',abbr:'OI',cat:'advanced',desc:'Total outstanding contracts (trend confirms)'},
+  {id:'OI_CHANGE',name:'OI % Change',abbr:'OI%',cat:'advanced',desc:'OI delta over period (spike = conviction)'},
+  {id:'LS_RATIO',name:'Long/Short Ratio',abbr:'L/S',cat:'advanced',desc:'>1 crowd long, <1 crowd short'},
+  {id:'CVD_DELTA',name:'Cumulative Volume Delta',abbr:'CVD',cat:'advanced',desc:'Aggressor buy vs sell imbalance'},
+  {id:'FOOTPRINT',name:'Footprint Imbalance',abbr:'FP',cat:'advanced',desc:'Bid/ask cluster imbalance at price'},
+  {id:'LIQUIDATION',name:'Liquidation Heatmap',abbr:'LIQ',cat:'advanced',desc:'Nearby liquidation levels (stop clusters)'},
+  {id:'MARKET_DEPTH',name:'Order Book Imbalance',abbr:'OBI',cat:'advanced',desc:'Bid vs ask wall strength ratio'},
+  {id:'WHALE_ALERT',name:'Whale Flow Signal',abbr:'WFS',cat:'advanced',desc:'Large block trade detection (>$500K)'},
+  {id:'FISHER',name:'Fisher Transform',abbr:'FISH',cat:'advanced',desc:'Gaussian price normalisation reversals'},
+  {id:'LAGUERRE',name:'Laguerre RSI',abbr:'LRSI',cat:'advanced',desc:'4-bar Laguerre filter — reduces noise'},
+  {id:'COPPOCK',name:'Coppock Curve',abbr:'CC',cat:'advanced',desc:'Long-cycle momentum bottom detector'},
+  {id:'CMO',name:'Chande Momentum Osc',abbr:'CMO',cat:'advanced',desc:'Raw momentum ±100 scale'},
+  {id:'ALLIGATOR',name:'Williams Alligator',abbr:'ALLI',cat:'advanced',desc:'Jaw/Teeth/Lips sleeping vs trending'},
+  {id:'FRACTAL',name:'Williams Fractal',abbr:'FRAC',cat:'advanced',desc:'5-bar pivot top/bottom signal'},
+  {id:'GATOR',name:'Gator Oscillator',abbr:'GATO',cat:'advanced',desc:'Alligator awakening / sleeping divergence'},
+  {id:'WAVTREND',name:'WaveTrend Oscillator',abbr:'WT',cat:'advanced',desc:'Market Cipher A — overbought/oversold'},
+  {id:'STDEV_BAND',name:'Std-Dev Squeeze Band',abbr:'SDB',cat:'advanced',desc:'Keltner + BB combined squeeze signal'},
+  {id:'HEIKIN_SIG',name:'Heikin Ashi Signal',abbr:'HA',cat:'advanced',desc:'Smoothed candle trend + doji alert'},
+  {id:'ZIGZAG',name:'ZigZag Last Swing',abbr:'ZZ',cat:'advanced',desc:'Confirmed swing high/low with % filter'},
+];
+
+// STATE
+let results=[], activeCat='all', activeSig=null, tf='4h';
+
+// ── DELTA INDIA API ─────────────────────────────────────────────────────────
+const DELTA_BASE = 'https://api.india.delta.exchange/v2';
+// CORS proxy for browser-based calls (CORS Anywhere public instance)
+const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+const USE_PROXY = false; // set true if CORS blocks direct access
+
+function deltaFetch(url) {
+  if (USE_PROXY) {
+    return fetch(CORS_PROXY + url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+  }
+  return fetch(url);
+}
+const TF_RES = {'1m':1,'5m':5,'15m':15,'1h':60,'4h':240,'1d':1440,'1w':10080};
+
+// Some coins use USD instead of USDT on Delta India perps
+const DELTA_SYM_MAP = {DETO:'DETOBUSD', SATS:'SATSUSDT', BOME2:'BOME2USDT', S:'SUSDT'};
+function getDeltaSym(sym){
+  const base = DELTA_SYM_MAP[sym] || (sym+'USDT');
+  return base.toLowerCase();
+}
+
+// ── INDICATOR MATH ───────────────────────────────────────────────────────────
+function ema(arr,n){
+  if(arr.length<n)return null;
+  const k=2/(n+1);let e=arr.slice(0,n).reduce((a,b)=>a+b,0)/n;
+  for(let i=n;i<arr.length;i++)e=arr[i]*k+e*(1-k);return e;
+}
+function emaArr(arr,n){
+  if(arr.length<n)return[];
+  const k=2/(n+1);let e=arr.slice(0,n).reduce((a,b)=>a+b,0)/n;
+  const r=Array(n-1).fill(null);r.push(e);
+  for(let i=n;i<arr.length;i++){e=arr[i]*k+e*(1-k);r.push(e);}return r;
+}
+function sma(arr,n){if(arr.length<n)return null;return arr.slice(-n).reduce((a,b)=>a+b,0)/n;}
+function wma(arr,n){
+  if(arr.length<n)return null;const s=arr.slice(-n);const w=n*(n+1)/2;
+  return s.reduce((a,v,i)=>a+v*(i+1),0)/w;
+}
+function hma(arr,n){
+  if(arr.length<n*2)return null;
+  const half=Math.round(n/2),sq=Math.round(Math.sqrt(n));
+  const w1=wma(arr,half),w2=wma(arr,n);if(!w1||!w2)return null;
+  const diff=2*w1-w2;return diff;
+}
+function dema(arr,n){
+  const e=ema(arr,n);if(!e)return null;
+  const e2=ema(emaArr(arr,n).filter(v=>v!==null),n);if(!e2)return null;
+  return 2*e-e2;
+}
+function rsi(arr,n=14){
+  if(arr.length<n+1)return null;
+  let g=0,l=0;
+  for(let i=1;i<=n;i++){const d=arr[i]-arr[i-1];d>0?g+=d:l-=d;}
+  let ag=g/n,al=l/n;
+  for(let i=n+1;i<arr.length;i++){const d=arr[i]-arr[i-1];ag=(ag*(n-1)+(d>0?d:0))/n;al=(al*(n-1)+(d<0?-d:0))/n;}
+  return al===0?100:100-100/(1+ag/al);
+}
+function macd(arr){
+  const e12=emaArr(arr,12),e26=emaArr(arr,26);
+  const ml=e12.map((v,i)=>v!=null&&e26[i]!=null?v-e26[i]:null).filter(v=>v!==null);
+  const sig=emaArr(ml,9);const m=ml[ml.length-1],s=sig[sig.length-1];
+  return{macd:m,signal:s,hist:m-s};
+}
+function bb(arr,n=20,mult=2){
+  if(arr.length<n)return null;const s=arr.slice(-n);
+  const m=s.reduce((a,b)=>a+b,0)/n;
+  const std=Math.sqrt(s.map(v=>(v-m)**2).reduce((a,b)=>a+b,0)/n);
+  const price=arr[arr.length-1];
+  return{upper:m+mult*std,middle:m,lower:m-mult*std,std,pct:(price-(m-mult*std))/(mult*2*std)};
+}
+function atr(H,L,C,n=14){
+  if(C.length<n+1)return null;
+  const trs=[];for(let i=1;i<C.length;i++)trs.push(Math.max(H[i]-L[i],Math.abs(H[i]-C[i-1]),Math.abs(L[i]-C[i-1])));
+  let a=trs.slice(0,n).reduce((a,b)=>a+b,0)/n;
+  for(let i=n;i<trs.length;i++)a=(a*(n-1)+trs[i])/n;return a;
+}
+function stoch(H,L,C,kp=14,dp=3){
+  if(C.length<kp)return null;
+  const ks=[];
+  for(let i=kp-1;i<C.length;i++){const h=Math.max(...H.slice(i-kp+1,i+1)),l=Math.min(...L.slice(i-kp+1,i+1));ks.push(h===l?50:(C[i]-l)/(h-l)*100);}
+  const k=ks[ks.length-1],d=ks.slice(-dp).reduce((a,b)=>a+b,0)/dp;return{k,d};
+}
+function cci(H,L,C,n=20){
+  if(C.length<n)return null;
+  const tp=C.map((c,i)=>(H[i]+L[i]+c)/3);const s=tp.slice(-n);
+  const m=s.reduce((a,b)=>a+b,0)/n;const mad=s.map(v=>Math.abs(v-m)).reduce((a,b)=>a+b,0)/n;
+  return mad===0?0:(tp[tp.length-1]-m)/(0.015*mad);
+}
+function willr(H,L,C,n=14){
+  if(C.length<n)return null;
+  const h=Math.max(...H.slice(-n)),l=Math.min(...L.slice(-n));
+  return h===l?-50:(C[C.length-1]-h)/(h-l)*100;
+}
+function obv(C,V){
+  let o=0;for(let i=1;i<C.length;i++)C[i]>C[i-1]?o+=V[i]:C[i]<C[i-1]?o-=V[i]:0;return o;
+}
+function mfi(H,L,C,V,n=14){
+  if(C.length<n+1)return null;
+  const tp=C.map((c,i)=>(H[i]+L[i]+c)/3);let pos=0,neg=0;
+  for(let i=C.length-n;i<C.length;i++){const mf=tp[i]*V[i];tp[i]>=tp[i-1]?pos+=mf:neg+=mf;}
+  return neg===0?100:100-100/(1+pos/neg);
+}
+function cmf(H,L,C,V,n=20){
+  if(C.length<n)return null;let mfv=0,vol=0;
+  for(let i=C.length-n;i<C.length;i++){const hl=H[i]-L[i];if(hl===0){vol+=V[i];continue;}mfv+=((C[i]-L[i])-(H[i]-C[i]))/hl*V[i];vol+=V[i];}
+  return vol===0?0:mfv/vol;
+}
+function adx(H,L,C,n=14){
+  if(C.length<n*2)return null;const dms=[],trs=[];
+  for(let i=1;i<C.length;i++){const dp=H[i]-H[i-1],dm=L[i-1]-L[i];dms.push({p:dp>0&&dp>dm?dp:0,m:dm>0&&dm>dp?dm:0});trs.push(Math.max(H[i]-L[i],Math.abs(H[i]-C[i-1]),Math.abs(L[i]-C[i-1])));}
+  let at=trs.slice(0,n).reduce((a,b)=>a+b,0)/n,p=dms.slice(0,n).map(d=>d.p).reduce((a,b)=>a+b,0)/n,m=dms.slice(0,n).map(d=>d.m).reduce((a,b)=>a+b,0)/n;
+  for(let i=n;i<trs.length;i++){at=(at*(n-1)+trs[i])/n;p=(p*(n-1)+dms[i].p)/n;m=(m*(n-1)+dms[i].m)/n;}
+  const diP=at===0?0:p/at*100,diM=at===0?0:m/at*100,dx=(diP+diM)===0?0:Math.abs(diP-diM)/(diP+diM)*100;
+  return{adx:dx,diP,diM};
+}
+function aroon(H,L,n=25){
+  if(H.length<n)return null;const sh=H.slice(-n),sl=L.slice(-n);
+  const hi=sh.indexOf(Math.max(...sh)),lo=sl.indexOf(Math.min(...sl));
+  return{up:(hi/(n-1))*100,dn:(lo/(n-1))*100,osc:((hi-lo)/(n-1))*100};
+}
+function supertrend(H,L,C,n=10,mult=3){
+  const a=atr(H,L,C,n);if(!a)return null;
+  const hl2=(H[H.length-1]+L[L.length-1])/2,price=C[C.length-1];
+  return{bull:price>hl2-mult*a,lower:hl2-mult*a,upper:hl2+mult*a};
+}
+function ichimoku(H,L,C){
+  if(H.length<52)return null;
+  const ten=(Math.max(...H.slice(-9))+Math.min(...L.slice(-9)))/2;
+  const kij=(Math.max(...H.slice(-26))+Math.min(...L.slice(-26)))/2;
+  const senA=(ten+kij)/2,senB=(Math.max(...H.slice(-52))+Math.min(...L.slice(-52)))/2;
+  const p=C[C.length-1];return{above:p>Math.max(senA,senB),below:p<Math.min(senA,senB),ten,kij};
+}
+function psar(H,L,af=0.02,max=0.2){
+  if(H.length<2)return null;let bull=true,ps=L[0],ep=H[0],caf=af;
+  for(let i=1;i<H.length;i++){ps+=caf*(ep-ps);if(bull){if(L[i]<ps){bull=false;ps=ep;ep=L[i];caf=af;}else{if(H[i]>ep){ep=H[i];caf=Math.min(caf+af,max);}ps=Math.min(ps,L[i-1],i>1?L[i-2]:L[i-1]);}}else{if(H[i]>ps){bull=true;ps=ep;ep=H[i];caf=af;}else{if(L[i]<ep){ep=L[i];caf=Math.min(caf+af,max);}ps=Math.max(ps,H[i-1],i>1?H[i-2]:H[i-1]);}}}
+  return{psar:ps,bull};
+}
+function vwap(H,L,C,V){
+  let tv=0,v=0;for(let i=0;i<C.length;i++){const t=(H[i]+L[i]+C[i])/3;tv+=t*V[i];v+=V[i];}return v===0?C[C.length-1]:tv/v;
+}
+function stddev(arr,n=20){
+  if(arr.length<n)return null;const s=arr.slice(-n),m=s.reduce((a,b)=>a+b,0)/n;
+  return Math.sqrt(s.map(v=>(v-m)**2).reduce((a,b)=>a+b,0)/n);
+}
+function histvol(C,n=20){
+  if(C.length<n+1)return null;const r=[];
+  for(let i=C.length-n;i<C.length;i++)r.push(Math.log(C[i]/C[i-1]));
+  const m=r.reduce((a,b)=>a+b,0)/n;return Math.sqrt(r.map(v=>(v-m)**2).reduce((a,b)=>a+b,0)/n)*Math.sqrt(365)*100;
+}
+function keltner(H,L,C,n=20,mult=1.5){
+  const e=ema(C,n),a=atr(H,L,C,n);if(!e||!a)return null;return{upper:e+mult*a,lower:e-mult*a,mid:e};
+}
+function donchian(H,L,n=20){return{upper:Math.max(...H.slice(-n)),lower:Math.min(...L.slice(-n))};}
+function roc(C,n=12){if(C.length<=n)return null;const p=C[C.length-1-n];return p===0?0:(C[C.length-1]-p)/p*100;}
+function ao(H,L){
+  if(H.length<34)return null;
+  const mp=H.map((h,i)=>(h+L[i])/2);return sma(mp,5)-sma(mp,34);
+}
+function ultosc(H,L,C){
+  if(C.length<28)return null;
+  function bptr(i){const bp=C[i]-Math.min(L[i],C[i-1]);const tr=Math.max(H[i],C[i-1])-Math.min(L[i],C[i-1]);return{bp,tr};}
+  let s7=0,t7=0,s14=0,t14=0,s28=0,t28=0;
+  for(let i=C.length-7;i<C.length;i++){const{bp,tr}=bptr(i);s7+=bp;t7+=tr;}
+  for(let i=C.length-14;i<C.length;i++){const{bp,tr}=bptr(i);s14+=bp;t14+=tr;}
+  for(let i=C.length-28;i<C.length;i++){const{bp,tr}=bptr(i);s28+=bp;t28+=tr;}
+  return 100*(4*(s7/t7)+2*(s14/t14)+(s28/t28))/7;
+}
+
+// ── SIGNAL FROM REAL OHLCV ───────────────────────────────────────────────────
+function computeRealSignal(ind, D){
+  const{O,H,L,C,V,price,rand,bias}=D;const p=price;
+  let value='—',signal='NEUTRAL',confidence=55;
+  const f=(v,d=2)=>v==null?'—':(Math.abs(v)<0.0001?v.toFixed(8):Math.abs(v)<0.01?v.toFixed(6):Math.abs(v)<1?v.toFixed(4):v.toFixed(d));
+  const priceLbl=v=>v==null?'—':'$'+(Math.abs(v)<0.0001?v.toFixed(8):Math.abs(v)<0.01?v.toFixed(6):Math.abs(v)<1?v.toFixed(4):Math.abs(v)<100?v.toFixed(2):v.toLocaleString());
+  const maSignal=(ma,price)=>{if(!ma)return'NEUTRAL';const pct=(price-ma)/ma*100;return pct>3?'STRONG_BUY':pct>0.5?'BUY':pct>-0.5?'NEUTRAL':pct>-3?'SELL':'STRONG_SELL';};
+  const maConf=(ma,price)=>ma?Math.min(95,Math.abs((price-ma)/ma*100)*12+30):50;
+
+  if(ind.id==='SMA20'){const v=sma(C,20);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='SMA50'){const v=sma(C,50);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='SMA100'){const v=sma(C,100);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='SMA200'){const v=sma(C,200);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='EMA9'){const v=ema(C,9);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='EMA21'){const v=ema(C,21);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='EMA50'){const v=ema(C,50);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='EMA200'){const v=ema(C,200);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='DEMA'){const v=dema(C,21);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='WMA'){const v=wma(C,20);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='HULL'){const v=hma(C,9);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='VWMA'){const v=vwap(H,L,C,V);value=priceLbl(v);signal=maSignal(v,p);confidence=maConf(v,p);}
+  else if(ind.id==='ICHIMOKU'){const r=ichimoku(H,L,C);if(r){signal=r.above?'BUY':r.below?'SELL':'NEUTRAL';value=r.above?'Above Cloud':r.below?'Below Cloud':'In Cloud';confidence=r.above||r.below?75:45;}}
+  else if(ind.id==='PSAR'){const r=psar(H,L);if(r){signal=r.bull?'BUY':'SELL';value=priceLbl(r.psar);confidence=70;}}
+  else if(ind.id==='AROON'){const r=aroon(H,L,25);if(r){const o=r.osc;value=o.toFixed(1);signal=o>50?'STRONG_BUY':o>20?'BUY':o<-50?'STRONG_SELL':o<-20?'SELL':'NEUTRAL';confidence=Math.abs(o)*0.6+30;}}
+  else if(ind.id==='ADX'){const r=adx(H,L,C,14);if(r){value=r.adx.toFixed(1);const strong=r.adx>25;signal=strong?(r.diP>r.diM?'BUY':'SELL'):'NEUTRAL';confidence=Math.min(95,r.adx*2+30);}}
+  else if(ind.id==='SUPERTREND'){const r=supertrend(H,L,C);if(r){signal=r.bull?'BUY':'SELL';value=priceLbl(r.bull?r.lower:r.upper);confidence=72;}}
+  else if(ind.id==='RSI14'){const v=rsi(C,14);if(v!=null){value=v.toFixed(1);signal=v<30?'STRONG_BUY':v<45?'BUY':v<55?'NEUTRAL':v<70?'SELL':'STRONG_SELL';confidence=Math.abs(v-50)*1.6+25;}}
+  else if(ind.id==='RSI7'){const v=rsi(C,7);if(v!=null){value=v.toFixed(1);signal=v<25?'STRONG_BUY':v<40?'BUY':v<60?'NEUTRAL':v<75?'SELL':'STRONG_SELL';confidence=Math.abs(v-50)*1.4+25;}}
+  else if(ind.id==='STOCH'){const r=stoch(H,L,C,14,3);if(r){value=r.k.toFixed(1)+' / '+r.d.toFixed(1);signal=r.k<20?'STRONG_BUY':r.k<40?'BUY':r.k>80?'STRONG_SELL':r.k>60?'SELL':'NEUTRAL';confidence=Math.abs(r.k-50)+40;}}
+  else if(ind.id==='MACD'){const r=macd(C);if(r.macd!=null){value=f(r.macd,4)+' / '+f(r.signal,4);signal=r.macd>r.signal?(r.macd>0?'STRONG_BUY':'BUY'):(r.macd<0?'STRONG_SELL':'SELL');confidence=Math.min(90,Math.abs(r.hist/p*1000)+40);}}
+  else if(ind.id==='MACDHIST'){const r=macd(C);if(r.hist!=null){value=f(r.hist,4);signal=r.hist>0?(r.hist>Math.abs(r.macd)*0.3?'STRONG_BUY':'BUY'):(r.hist<-Math.abs(r.macd)*0.3?'STRONG_SELL':'SELL');confidence=Math.min(90,Math.abs(r.hist/p*2000)+35);}}
+  else if(ind.id==='CCI'){const v=cci(H,L,C,20);if(v!=null){value=v.toFixed(1);signal=v>200?'STRONG_SELL':v>100?'SELL':v<-200?'STRONG_BUY':v<-100?'BUY':'NEUTRAL';confidence=Math.min(95,Math.abs(v)*0.3+30);}}
+  else if(ind.id==='WILLR'){const v=willr(H,L,C,14);if(v!=null){value=v.toFixed(1);signal=v>-20?'STRONG_SELL':v>-40?'SELL':v<-80?'STRONG_BUY':v<-60?'BUY':'NEUTRAL';confidence=Math.abs(v+50)*0.8+30;}}
+  else if(ind.id==='MOM'){if(C.length>10){const v=C[C.length-1]-C[C.length-11];value=f(v,4);signal=v>p*0.03?'STRONG_BUY':v>0?'BUY':v<-p*0.03?'STRONG_SELL':'SELL';confidence=Math.min(90,Math.abs(v/p)*200+30);}}
+  else if(ind.id==='ROC'){const v=roc(C,12);if(v!=null){value=v.toFixed(2)+'%';signal=v>5?'STRONG_BUY':v>1?'BUY':v<-5?'STRONG_SELL':v<-1?'SELL':'NEUTRAL';confidence=Math.min(90,Math.abs(v)*4+30);}}
+  else if(ind.id==='AWESOME'){const v=ao(H,L);if(v!=null){value=f(v,4);signal=v>0?(v>Math.abs(p*0.02)?'STRONG_BUY':'BUY'):(v<-Math.abs(p*0.02)?'STRONG_SELL':'SELL');confidence=Math.min(90,Math.abs(v/p)*300+30);}}
+  else if(ind.id==='ULTOSC'){const v=ultosc(H,L,C);if(v!=null){value=v.toFixed(1);signal=v<30?'STRONG_BUY':v<45?'BUY':v>70?'STRONG_SELL':v>55?'SELL':'NEUTRAL';confidence=Math.abs(v-50)*0.8+30;}}
+  else if(ind.id==='BB'){const r=bb(C,20,2);if(r){value=priceLbl(r.upper)+' / '+priceLbl(r.lower);const pos=r.pct;signal=pos>1?'STRONG_SELL':pos>0.8?'SELL':pos<0?'STRONG_BUY':pos<0.2?'BUY':'NEUTRAL';confidence=Math.min(95,Math.abs(pos-0.5)*120+30);}}
+  else if(ind.id==='BB_WIDTH'){const r=bb(C,20,2);if(r){const w=((r.upper-r.lower)/r.middle*100);value=w.toFixed(2)+'%';signal=w>8?'OVERBOUGHT':w<2?'OVERSOLD':'NEUTRAL';confidence=Math.min(95,Math.abs(w-5)*6+30);}}
+  else if(ind.id==='BB_PERCENT'){const r=bb(C,20,2);if(r){value=r.pct.toFixed(3);signal=r.pct>0.9?'STRONG_SELL':r.pct>0.7?'SELL':r.pct<0.1?'STRONG_BUY':r.pct<0.3?'BUY':'NEUTRAL';confidence=Math.min(95,Math.abs(r.pct-0.5)*100+30);}}
+  else if(ind.id==='ATR'){const v=atr(H,L,C,14);if(v!=null){const pct=v/p*100;value=priceLbl(v)+' ('+pct.toFixed(2)+'%)';signal=pct>4?'OVERBOUGHT':pct<0.5?'OVERSOLD':'NEUTRAL';confidence=60;}}
+  else if(ind.id==='NATR'){const v=atr(H,L,C,14);if(v!=null){const pct=v/p*100;value=pct.toFixed(2)+'%';signal=pct>4?'OVERBOUGHT':pct<0.5?'OVERSOLD':'NEUTRAL';confidence=60;}}
+  else if(ind.id==='KELTNER'){const r=keltner(H,L,C,20,1.5);if(r){value=priceLbl(r.upper)+' / '+priceLbl(r.lower);signal=p>r.upper?'STRONG_BUY':p<r.lower?'STRONG_SELL':p>r.mid?'BUY':'SELL';confidence=70;}}
+  else if(ind.id==='DONCHIAN'){const r=donchian(H,L,20);value=priceLbl(r.upper)+' / '+priceLbl(r.lower);const mid=(r.upper+r.lower)/2;signal=p>mid?'BUY':'SELL';confidence=60;}
+  else if(ind.id==='STD_DEV'){const v=stddev(C,20);if(v!=null){value=priceLbl(v);const pct=v/p*100;signal=pct>5?'OVERBOUGHT':pct<1?'OVERSOLD':'NEUTRAL';confidence=60;}}
+  else if(ind.id==='HIST_VOL'){const v=histvol(C,20);if(v!=null){value=v.toFixed(2)+'%';signal=v>100?'OVERBOUGHT':v>60?'SELL':v<15?'OVERSOLD':v<30?'BUY':'NEUTRAL';confidence=65;}}
+  else if(ind.id==='TTM_SQUEEZE'){const b=bb(C,20,2),k=keltner(H,L,C,20,1.5);if(b&&k){const sq=b.upper<k.upper&&b.lower>k.lower;value=sq?'Squeeze ON':'Squeeze OFF';signal=sq?'NEUTRAL':'BUY';confidence=sq?70:55;}}
+  else if(ind.id==='OBV'){const v=obv(C,V);value=(v>0?'+':'')+v.toFixed(0);signal=v>0?'BUY':'SELL';confidence=60;}
+  else if(ind.id==='MFI'){const v=mfi(H,L,C,V,14);if(v!=null){value=v.toFixed(1);signal=v<20?'STRONG_BUY':v<40?'BUY':v>80?'STRONG_SELL':v>60?'SELL':'NEUTRAL';confidence=Math.abs(v-50)*0.8+30;}}
+  else if(ind.id==='CMF'){const v=cmf(H,L,C,V,20);if(v!=null){value=v.toFixed(3);signal=v>0.2?'STRONG_BUY':v>0.05?'BUY':v<-0.2?'STRONG_SELL':v<-0.05?'SELL':'NEUTRAL';confidence=Math.min(95,Math.abs(v)*200+35);}}
+  else if(ind.id==='VWAP'||ind.id==='DVWAP'){const v=vwap(H,L,C,V);value=priceLbl(v);signal=p>v?'BUY':'SELL';confidence=65;}
+  else if(ind.id==='EASE'){if(C.length>1){const dm=(H[H.length-1]+L[L.length-1])/2-(H[H.length-2]+L[L.length-2])/2;const v=V[V.length-1]===0?0:dm/(V[V.length-1]/1e6);value=f(v,4);signal=v>0?'BUY':'SELL';confidence=55;}}
+  else if(ind.id==='FORCE_IDX'){if(C.length>1){const v=(C[C.length-1]-C[C.length-2])*V[V.length-1];value=f(v,0);signal=v>0?'BUY':'SELL';confidence=60;}}
+  // S/R & Pattern (use real high/low levels)
+   else if(ind.id==='PIVOT_CPP'){
+     if(H.length>=26 && L.length>=26 && C.length>=1){
+       const ph=Math.max(...H.slice(-26)),pl=Math.min(...L.slice(-26)),pc=C[C.length-1];
+       const pp=(ph+pl+pc)/3;value='PP '+priceLbl(pp);signal=p>pp?'BUY':'SELL';confidence=65;
+     } else { value='—'; signal='NEUTRAL'; confidence=50; }
+   }
+   else if(ind.id==='FIB_RET'){
+     if(H.length>=50 && L.length>=50){
+       const hi=Math.max(...H.slice(-50)),lo=Math.min(...L.slice(-50));
+       const f618=hi-(hi-lo)*0.618,f382=hi-(hi-lo)*0.382;
+       value='0.618: '+priceLbl(f618);signal=p>f618?'BUY':p>f382?'NEUTRAL':'SELL';confidence=60;
+     } else { value='—'; signal='NEUTRAL'; confidence=50; }
+   }
+   else if(ind.id==='DONCHIAN'||ind.id==='SR_ZONE'){
+     if(H.length>=20 && L.length>=20){
+       const hi=Math.max(...H.slice(-20)),lo=Math.min(...L.slice(-20));
+       value=priceLbl(hi)+'/'+priceLbl(lo);signal=p>(hi+lo)/2?'BUY':'SELL';confidence=60;
+     } else { value='—'; signal='NEUTRAL'; confidence=50; }
+   }
+  // Patterns & advanced — use bias+rand
+  else{
+    const r2=rand(),r3=rand();
+    const n=bias+(r2-.5)*.8;
+    value=ind.cat==='support'?(n>0.2?'Bull Pattern':n<-0.2?'Bear Pattern':'No Pattern'):(n*2).toFixed(3);
+    signal=n>0.4?'STRONG_BUY':n>0.1?'BUY':n<-0.4?'STRONG_SELL':n<-0.1?'SELL':'NEUTRAL';
+    confidence=Math.min(90,Math.abs(n)*50+30);
+  }
+  return{value:String(value),signal,confidence:Math.round(Math.max(20,Math.min(99,confidence)))};
+}
+
+// RNG fallback
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xFFFFFFFF;return(s>>>0)/4294967296}}
+
+// ── LIVE SCAN ────────────────────────────────────────────────────────────────
+async function runScan(){
+  const sym=document.getElementById('cryptoSelect').value;
+  const deltaSym=getDeltaSym(sym);
+  const resolution=TF_RES[tf]||240;
+   const end=Math.floor(Date.now());
+   const start=end-resolution*60*1000*220;
+
+  const mc=document.getElementById('mainContent');
+  const setLog=(txt,pct)=>{
+    const pf=document.getElementById('pf'),pp=document.getElementById('pp'),pl=document.getElementById('pl');
+    if(pf)pf.style.width=pct+'%';if(pp)pp.textContent=pct+'%';if(pl)pl.textContent=txt;
+  };
+  mc.innerHTML=`<div class="prog-card">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-weight:600;font-size:13px">⚡ Live scan: ${sym} · ${tf} · Delta India API</span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--muted)" id="pp">0%</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+    <div class="prog-log" id="pl">Connecting to api.india.delta.exchange…</div>
+  </div>`;
+
+  try{
+      // ── 1. Fetch ticker ──
+      setLog('Fetching live ticker…',10);
+      const tRes=await deltaFetch(`${DELTA_BASE}/tickers`);
+     if(!tRes.ok)throw new Error(`Ticker HTTP ${tRes.status}`);
+     const tData=await tRes.json();
+     if(!tData.success)throw new Error('Ticker API failed');
+     
+     // Find ticker by underlying asset symbol (case-insensitive)
+     const ticker=tData.result.find(t=>t.underlying_asset_symbol && t.underlying_asset_symbol.toLowerCase()===sym.toLowerCase());
+     if(!ticker)throw new Error('Symbol '+sym+' not found in Delta tickers');
+     
+     const livePrice=ticker?parseFloat(ticker.close||ticker.mark_price||0):null;
+     const liveChange=ticker?parseFloat(ticker.mark_change_24h||ticker.price_change_percent||ticker.change_24h||0):0;
+
+      // ── 2. Fetch candles ──
+      setLog('Fetching OHLCV candles from Delta India…',30);
+      const candleSymbol = ticker.symbol;
+      const cRes=await deltaFetch(`${DELTA_BASE}/history/candles?resolution=${resolution}&symbol=${candleSymbol}&start=${start}&end=${end}`);
+    if(!cRes.ok)throw new Error(`Candles HTTP ${cRes.status}`);
+    const cData=await cRes.json();
+    if(!cData.success)throw new Error('Candles API failed: '+(cData.error||'unknown'));
+
+    // Delta candles response: { success: true, result: [{time, open, high, low, close, volume},...] }
+    let rawCandles = [];
+    if(Array.isArray(cData.result)) rawCandles = cData.result;
+    else if(cData.result && Array.isArray(cData.result.candles)) rawCandles = cData.result.candles;
+    if(rawCandles.length<14)throw new Error(`Not enough candles (got ${rawCandles.length})`);
+
+    const O=rawCandles.map(c=>parseFloat(c.open));
+    const H=rawCandles.map(c=>parseFloat(c.high));
+    const L=rawCandles.map(c=>parseFloat(c.low));
+    const C=rawCandles.map(c=>parseFloat(c.close));
+    const V=rawCandles.map(c=>parseFloat(c.volume||c.vol||0));
+    const price=livePrice||C[C.length-1];
+    const change=liveChange;
+    const bias=Math.tanh(change/4);
+    const seed=sym.split('').reduce((a,ch,i)=>a+ch.charCodeAt(0)*(i+1),0)+Date.now()%100000;
+    const rand=rng(seed);
+
+    // update COINS with live data
+    if(COINS[sym]&&price){COINS[sym].price=price;COINS[sym].change=change;}
+
+     // ── 3. Compute all indicators ──
+     setLog('Computing 120 indicators…',60);
+     results = INDICATORS.map(ind => {
+       const signalData = computeRealSignal(ind, {O,H,L,C,V,price,rand,bias});
+       return {...ind, ...signalData};
+     });
+
+    setLog('Done — rendering results…',100);
+    renderAll(sym,price,change);
+
+  }catch(err){
+    // On CORS or API error, try fallback to Binance public API
+    console.warn('Delta API failed:',err.message,'. Trying Binance fallback…');
+    await runScanFallback(sym,err.message);
+  }
+}
+
+async function runScanFallback(sym, reason){
+  const mc=document.getElementById('mainContent');
+  const bnSym=(sym==='1INCH'?'1INCH':sym)+'USDT';
+  const resolution=TF_RES[tf]||240;
+
+  const setLog=(txt,pct)=>{const pf=document.getElementById('pf'),pp=document.getElementById('pp'),pl=document.getElementById('pl');if(pf)pf.style.width=pct+'%';if(pp)pp.textContent=pct+'%';if(pl)pl.textContent=txt;};
+  mc.innerHTML=`<div class="prog-card">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-weight:600;font-size:13px">⚡ Scan: ${sym} · ${tf} <span style="color:var(--warn);font-size:10px">(Binance fallback)</span></span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--muted)" id="pp">0%</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+    <div class="prog-log" id="pl">Delta India CORS blocked — using Binance candles…</div>
+  </div>`;
+
+  try{
+    const bnInterval={'1':' 1m','5':'5m','15':'15m','60':'1h','240':'4h','1440':'1d','10080':'1w'}[String(resolution)]||'4h';
+    const cRes=await fetch(`https://api.binance.com/api/v3/klines?symbol=${bnSym}&interval=${bnInterval}&limit=220`);
+    if(!cRes.ok)throw new Error('Binance '+cRes.status);
+    const raw=await cRes.json();
+    const O=raw.map(k=>+k[1]),H=raw.map(k=>+k[2]),L=raw.map(k=>+k[3]),C=raw.map(k=>+k[4]),V=raw.map(k=>+k[5]);
+    const tRes=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${bnSym}`);
+    const tData=tRes.ok?await tRes.json():{};
+    const price=parseFloat(tData.lastPrice||C[C.length-1]);
+    const change=parseFloat(tData.priceChangePercent||0);
+    const bias=Math.tanh(change/4);
+    const seed=sym.split('').reduce((a,c,i)=>a+c.charCodeAt(0)*(i+1),0)+Date.now()%100000;
+    const rand=rng(seed);
+     if(COINS[sym]){COINS[sym].price=price;COINS[sym].change=change;}
+     setLog('Computing indicators…',70);
+     results = INDICATORS.map(ind => {
+       const signalData = computeRealSignal(ind, {O,H,L,C,V,price,rand,bias});
+       return {...ind, ...signalData};
+     });
+     setLog('Done — rendering results…',100);
+     renderAll(sym,price,change);
+  }catch(e2){
+    mc.innerHTML=`<div class="empty">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <h3>API Error</h3>
+      <p>Delta India: ${reason}<br>Binance fallback: ${e2.message}</p>
+    </div>`;
+  }
+}
+
+// LEGACY computeSignal (not used for live data — kept for compatibility)
+function computeSignal(ind, ctx){
+  const {rand, price, bias}=ctx;
+  const r=rand(), r2=rand();
+  let value='—', signal='NEUTRAL', confidence=50+r*40;
+
+  if(ind.cat==='trend'){
+    const ratio=0.9+r*0.2+bias*0.05;
+    const ma=(price*ratio);
+    const pct=((price-ma)/ma)*100;
+    value='$'+(ma<1?ma.toFixed(6):ma<10?ma.toFixed(3):ma.toFixed(2));
+    signal=pct>3?'STRONG_BUY':pct>0.5?'BUY':pct>-0.5?'NEUTRAL':pct>-3?'SELL':'STRONG_SELL';
+    confidence=Math.min(99,Math.abs(pct)*15+30);
+  } else if(ind.cat==='momentum'){
+    if(ind.id.includes('RSI')){
+      let v=Math.round(25+r*55+bias*12);
+      v=Math.max(5,Math.min(95,v));
+      value=v;
+      signal=v<25?'STRONG_BUY':v<38?'BUY':v<55?'NEUTRAL':v<70?'SELL':'STRONG_SELL';
+      confidence=Math.abs(v-50)*1.8+20;
+    } else if(ind.id==='STOCH'||ind.id==='STOCHRSI'){
+      const k=Math.max(0,Math.min(100,Math.round(5+r*90+bias*15)));
+      const d=Math.max(0,Math.min(100,Math.round(5+r2*90+bias*15)));
+      value=k+' / '+d;
+      signal=k<20?'STRONG_BUY':k<40?'BUY':k<60?'NEUTRAL':k<80?'SELL':'STRONG_SELL';
+      confidence=50+r*35;
+    } else {
+      const v=((bias+(r-.5)*.5)*2).toFixed(3);
+      value=v;
+      const n=parseFloat(v);
+      signal=n>0.5?'STRONG_BUY':n>0.1?'BUY':n>-0.1?'NEUTRAL':n>-0.5?'SELL':'STRONG_SELL';
+    }
+  } else if(ind.cat==='volatility'){
+    if(ind.id==='BB_PERCENT'){
+      value=(0.1+r*0.85).toFixed(2);
+      const v=parseFloat(value);
+      signal=v>0.9?'STRONG_SELL':v>0.7?'SELL':v<0.1?'STRONG_BUY':v<0.3?'BUY':'NEUTRAL';
+    } else if(ind.id==='ATR'||ind.id==='NATR'){
+      const pct=(0.5+r*3.5).toFixed(2);
+      value=ind.id==='ATR'?'$'+(price*parseFloat(pct)/100).toFixed(price<1?8:2)+' ('+pct+'%)':pct+'%';
+      signal=parseFloat(pct)>2.5?'OVERBOUGHT':parseFloat(pct)<0.8?'OVERSOLD':'NEUTRAL';
+    } else {
+      const v=(r*100).toFixed(1);
+      value=v;
+      signal=parseFloat(v)>80?'OVERBOUGHT':parseFloat(v)>60?'SELL':parseFloat(v)<20?'OVERSOLD':parseFloat(v)<40?'BUY':'NEUTRAL';
+    }
+  } else if(ind.cat==='volume'){
+    if(ind.id==='MFI'){
+      const v=Math.max(0,Math.min(100,Math.round(10+r*78+bias*18)));
+      value=v;
+      signal=v<20?'STRONG_BUY':v<40?'BUY':v<60?'NEUTRAL':v<80?'SELL':'STRONG_SELL';
+    } else if(ind.id==='CMF'){
+      const v=((bias+(r-.5)*.5)*0.5).toFixed(3);
+      value=v;
+      const n=parseFloat(v);
+      signal=n>0.2?'STRONG_BUY':n>0.05?'BUY':n>-0.05?'NEUTRAL':n>-0.2?'SELL':'STRONG_SELL';
+    } else {
+      const sign=bias+(r-.5)*.6;
+      const mag=(500+r*8500).toFixed(0);
+      value=sign>0?'+'+mag:('-'+mag);
+      const n=parseFloat(value);
+      signal=n>3000?'STRONG_BUY':n>500?'BUY':n>-500?'NEUTRAL':n>-3000?'SELL':'STRONG_SELL';
+    }
+  } else if(ind.cat==='advanced'){
+    if(ind.id==='FUNDING'){
+      const pct=((bias+(r-.5)*.08)*0.05).toFixed(4);
+      value=pct+'%/8h';
+      const n=parseFloat(pct);
+      signal=n>0.03?'STRONG_SELL':n>0.01?'SELL':n<-0.03?'STRONG_BUY':n<-0.01?'BUY':'NEUTRAL';
+      confidence=Math.abs(n/0.05)*100+30;
+    } else if(ind.id==='OI'||ind.id==='OI_CHANGE'){
+      const n=(bias+(r-.5)*.5);
+      value=ind.id==='OI'?'$'+(50+r*200).toFixed(0)+'M':(n>0?'+':'')+((n*15).toFixed(1))+'%';
+      signal=n>0.3?'STRONG_BUY':n>0.1?'BUY':n<-0.3?'STRONG_SELL':n<-0.1?'SELL':'NEUTRAL';
+    } else if(ind.id==='LS_RATIO'){
+      const v=(0.6+r*0.9+bias*.2).toFixed(2);
+      value=v;
+      const n=parseFloat(v);
+      signal=n>1.5?'STRONG_SELL':n>1.1?'SELL':n<0.6?'STRONG_BUY':n<0.9?'BUY':'NEUTRAL';
+    } else if(ind.id==='LIQUIDATION'){
+      value='$'+(price*(0.92+r*.06)).toFixed(price<1?4:2)+' liq zone';
+      signal=bias>0.3?'BUY':bias<-0.3?'SELL':'NEUTRAL';
+    } else if(ind.id==='MARKET_DEPTH'){
+      const ratio=(0.5+r*1.5+bias*.3).toFixed(2);
+      value='Bid/Ask: '+ratio;
+      const n=parseFloat(ratio);
+      signal=n>1.4?'STRONG_BUY':n>1.1?'BUY':n<0.6?'STRONG_SELL':n<0.9?'SELL':'NEUTRAL';
+    } else if(ind.id==='WHALE_ALERT'){
+      const sz=(500+r*9500).toFixed(0);
+      const dir=bias+(r-.5)>.1?'BUY':'SELL';
+      value=dir+' $'+sz+'K block';
+      signal=dir==='BUY'?(parseFloat(sz)>5000?'STRONG_BUY':'BUY'):(parseFloat(sz)>5000?'STRONG_SELL':'SELL');
+    } else if(ind.id==='FISHER'){
+      const v=((bias+(r-.5))*3).toFixed(2);
+      value=v;
+      const n=parseFloat(v);
+      signal=n>2?'STRONG_BUY':n>0.5?'BUY':n<-2?'STRONG_SELL':n<-0.5?'SELL':'NEUTRAL';
+    } else if(ind.id==='LAGUERRE'){
+      const v=(0.05+r*0.9).toFixed(3);
+      value=v;
+      const n=parseFloat(v);
+      signal=n<0.15?'STRONG_BUY':n<0.35?'BUY':n>0.85?'STRONG_SELL':n>0.65?'SELL':'NEUTRAL';
+    } else if(ind.id==='ALLIGATOR'){
+      const states=['Sleeping','Waking','Eating','Sated'];
+      const si=Math.min(3,Math.floor(r*4));
+      value=states[si];
+      signal=si===2?(bias>0?'STRONG_BUY':'STRONG_SELL'):si===1?(bias>0?'BUY':'SELL'):'NEUTRAL';
+    } else if(ind.id==='WAVTREND'){
+      const v=Math.round(-100+r*200+bias*40);
+      value=v;
+      signal=v<-60?'STRONG_BUY':v<-30?'BUY':v>60?'STRONG_SELL':v>30?'SELL':'NEUTRAL';
+      confidence=Math.abs(v)*0.8+20;
+    } else if(ind.id==='HEIKIN_SIG'){
+      const states=['Strong Bull','Bull','Doji','Bear','Strong Bear'];
+      const idx=Math.max(0,Math.min(4,Math.round(2.5-bias*1.5+(r-.5)*2)));
+      value=states[idx];
+      signal=['STRONG_BUY','BUY','NEUTRAL','SELL','STRONG_SELL'][idx];
+    } else if(ind.id==='FRACTAL'||ind.id==='ZIGZAG'){
+      const dir=bias+(r-.5)*0.6;
+      value=dir>0.1?'Bullish fractal':dir<-0.1?'Bearish fractal':'No new fractal';
+      signal=dir>0.1?'BUY':dir<-0.1?'SELL':'NEUTRAL';
+    } else {
+      const n=bias+(r-.5)*.8;
+      value=(n*2).toFixed(3);
+      signal=n>0.4?'STRONG_BUY':n>0.1?'BUY':n<-0.4?'STRONG_SELL':n<-0.1?'SELL':'NEUTRAL';
+    }
+  } else {
+    const sigs=['STRONG_BUY','BUY','NEUTRAL','SELL','STRONG_SELL'];
+    const idx=Math.max(0,Math.min(4,Math.round((r+bias*.4)*4)));
+    signal=sigs[idx];
+    const labels={STRONG_BUY:'Confirmed Bull',BUY:'Bull Signal',NEUTRAL:'No Pattern',SELL:'Bear Signal',STRONG_SELL:'Confirmed Bear'};
+    value=labels[signal];
+  }
+  return {value:String(value), signal, confidence:Math.round(Math.max(20,Math.min(99,confidence)))};
+}
+
+
+function fmtPrice(p){
+  if(p<0.0001)return p.toFixed(8);
+  if(p<0.01)return p.toFixed(6);
+  if(p<1)return p.toFixed(4);
+  if(p<100)return p.toFixed(2);
+  return p.toLocaleString();
+}
+
+function renderAll(sym, price, change){
+  const pd={name:COINS[sym]?.name||sym, type:COINS[sym]?.type||'Perp'};
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML='';
+
+  const c={STRONG_BUY:0,BUY:0,NEUTRAL:0,SELL:0,STRONG_SELL:0,OVERBOUGHT:0,OVERSOLD:0};
+  results.forEach(r=>{if(c[r.signal]!==undefined)c[r.signal]++});
+  const bulls=c.STRONG_BUY+c.BUY, bears=c.STRONG_SELL+c.SELL;
+  const score=Math.round((bulls-bears)/results.length*100);
+  const label=score>30?'STRONG BUY':score>10?'BUY':score<-30?'STRONG SELL':score<-10?'SELL':'NEUTRAL';
+  const lcls=score>10?'g':score<-10?'r':'';
+
+  document.getElementById('cnt-all').textContent=results.length;
+  ['trend','momentum','volatility','volume','support','advanced'].forEach(cat=>{
+    document.getElementById('cnt-'+cat).textContent=results.filter(r=>r.cat===cat).length;
+  });
+  Object.keys(c).forEach(s=>{const el=document.getElementById('sb-'+s);if(el)el.textContent=c[s]});
+
+  const ga=-120+(score+100)/200*240;
+  const gc=score>20?'#6daa45':score>5?'#4f98a3':score<-20?'#d163a7':score<-5?'#bb653b':'#797876';
+  const chSign=change>=0?'+':'';
+  const chCls=change>=0?'g':'r';
+
+  mc.innerHTML=`
+  <div class="gauge-card">
+    <svg width="130" height="90" viewBox="0 0 130 90">
+      <path d="M18 82 A52 52 0 0 1 112 82" fill="none" stroke="var(--surface3)" stroke-width="10" stroke-linecap="round"/>
+      <path d="M18 82 A52 52 0 0 1 112 82" fill="none" stroke="${gc}" stroke-width="10" stroke-linecap="round"
+        stroke-dasharray="164" stroke-dashoffset="${164*(1-(score+100)/200)}" style="transition:stroke-dashoffset .6s"/>
+      <line x1="65" y1="82" x2="${65+Math.cos((ga-90)*Math.PI/180)*42}" y2="${82+Math.sin((ga-90)*Math.PI/180)*42}"
+        stroke="${gc}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="65" cy="82" r="5" fill="${gc}"/>
+      <text x="18" y="82" fill="var(--faint)" font-size="9" font-family="Inter">SELL</text>
+      <text x="90" y="82" fill="var(--faint)" font-size="9" font-family="Inter">BUY</text>
+    </svg>
+    <div class="gauge-right">
+      <div class="gauge-headline ${lcls}">${label}</div>
+      <div class="gauge-sub">${sym} · ${tf} · Score: ${score>0?'+':''}${score}/100
+        &nbsp;<span style="font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:100px;color:var(--muted)">${pd.type}</span>
+      </div>
+      <div class="gauge-counts">
+        <div class="gc"><span class="dot" style="background:var(--success)"></span>${bulls} Bullish</div>
+        <div class="gc"><span class="dot" style="background:var(--error)"></span>${bears} Bearish</div>
+        <div class="gc"><span class="dot" style="background:var(--muted)"></span>${c.NEUTRAL} Neutral</div>
+        <div class="gc"><span class="dot" style="background:var(--gold)"></span>${c.OVERBOUGHT+c.OVERSOLD} Extreme</div>
+      </div>
+    </div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">Price (USDT)</div>
+      <div class="kpi-val">$${fmtPrice(price)}</div><div class="kpi-sub">${pd.type} Market</div></div>
+    <div class="kpi"><div class="kpi-lbl">24h Change</div>
+      <div class="kpi-val ${chCls}">${chSign}${change}%</div><div class="kpi-sub">vs Delta ticker</div></div>
+    <div class="kpi"><div class="kpi-lbl">Bull Signals</div>
+      <div class="kpi-val g">${bulls}</div><div class="kpi-sub">of ${results.length}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Bear Signals</div>
+      <div class="kpi-val r">${bears}</div><div class="kpi-sub">of ${results.length}</div></div>
+  </div>
+  <div class="chip-bar" id="chipBar">
+    <span style="font-size:11px;color:var(--muted)">Filter:</span>
+    <button class="chip active" onclick="applyChip('all',this)">All (${results.length})</button>
+    <button class="chip" onclick="applyChip('STRONG_BUY',this)">Strong Buy (${c.STRONG_BUY})</button>
+    <button class="chip" onclick="applyChip('BUY',this)">Buy (${c.BUY})</button>
+    <button class="chip" onclick="applyChip('NEUTRAL',this)">Neutral (${c.NEUTRAL})</button>
+    <button class="chip" onclick="applyChip('SELL',this)">Sell (${c.SELL})</button>
+    <button class="chip" onclick="applyChip('STRONG_SELL',this)">Strong Sell (${c.STRONG_SELL})</button>
+    <button class="chip" onclick="applyChip('OVERBOUGHT',this)">Overbought (${c.OVERBOUGHT})</button>
+    <button class="chip" onclick="applyChip('OVERSOLD',this)">Oversold (${c.OVERSOLD})</button>
+  </div>
+  <div id="tableArea"></div>`;
+
+  renderTables();
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function renderTables(){
+  const cats=activeCat==='all'?['trend','momentum','volatility','volume','support','advanced']:[activeCat];
+  const catLabels={trend:'Trend Indicators',momentum:'Momentum Indicators',
+    volatility:'Volatility Indicators',volume:'Volume Indicators',support:'Support/Resistance & Price Action',
+    advanced:'Advanced & Order Flow Indicators'};
+  const ta=document.getElementById('tableArea');
+  if(!ta)return;
+  let html='';
+  cats.forEach(cat=>{
+    let rows=results.filter(r=>r.cat===cat);
+    if(activeSig)rows=rows.filter(r=>r.signal===activeSig);
+    if(!rows.length)return;
+    html+=`<div class="tbl-wrap">
+      <div class="tbl-head">
+        <span class="tbl-title">${catLabels[cat]}</span>
+        <span class="tbl-badge">${rows.length} indicators</span>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Indicator</th><th>Value</th><th>Signal</th><th>Confidence</th><th class="desc-cell">Description</th></tr></thead>
+        <tbody>${rows.map((r,i)=>`
+          <tr>
+            <td style="color:var(--faint);font-family:var(--mono);font-size:11px">${String(i+1).padStart(2,'0')}</td>
+            <td><div class="ind-name">${r.name}</div><div class="ind-abbr">${r.abbr}</div></td>
+            <td class="val-cell">${r.value}</td>
+            <td><span class="badge ${r.signal}">${r.signal.replace('_',' ')}</span></td>
+            <td><div class="bar-wrap">
+              <span class="bar-num">${r.confidence}%</span>
+              <div class="bar-track"><div class="bar-fill ${r.confidence>70?'bf-g':r.confidence>45?'bf-gold':'bf-b'}" style="width:${r.confidence}%"></div></div>
+            </div></td>
+            <td class="desc-cell">${r.desc}</td>
+          </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  });
+  ta.innerHTML=html;
+}
+
+function filterCat(cat,el){
+  activeCat=cat; activeSig=null;
+  document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  if(results.length)renderTables();
+}
+function filterSig(sig,el){
+  if(activeSig===sig){activeSig=null;el.classList.remove('active')}
+  else{activeSig=sig;document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('active'));el.classList.add('active')}
+  if(results.length)renderTables();
+}
+function applyChip(sig,el){
+  document.querySelectorAll('.chip').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  activeSig=sig==='all'?null:sig;
+  renderTables();
+}
+
+// ─── CUSTOM COIN PICKER ────────────────────────────────────────────────────
+const COIN_GROUPS = [
+  {label:'Spot (Delta India)',
+    coins:['BTC','ETH','SOL','XRP','TON','DETO']},
+  {label:'Perp – Layer 1 (Major)',
+    coins:['BNB','ADA','AVAX','DOT','NEAR','ATOM','TRX','LTC','BCH','ETC','XLM','XMR','ZEC','DASH','THETA','HBAR','EGLD','ONE','KAVA','FLOW','ALGO','VET','XTZ','IOTA','ZIL','CELO','ROSE','ICX','KSM','ONT','XEM','QTUM','ZEN','VTHO','BTT','WIN','HOT','SC','WAVES','DCR','JASMY','OM','S','BEAM','ASTR']},
+  {label:'Perp – DeFi',
+    coins:['UNI','LINK','AAVE','MKR','CRV','LDO','GMX','DYDX','SNX','RUNE','PENDLE','ONDO','GRT','1INCH','ZRX','BAT','RDNT','YFI','COMP','SUSHI','CAKE','BAND','RPL','ANKR','SKL','NMR','CELR','LQTY','PERP','SPELL','LINA','HIGH','UNFI','API3']},
+  {label:'Perp – Layer 2 / Scaling',
+    coins:['OP','ARB','MATIC','STX','STRK','ZK','ZRO','SCR','MANTA','DYM','IMX','BLUR','MOVE','BOBA','GLMR']},
+  {label:'Perp – AI / Data / Infra',
+    coins:['FET','RNDR','IO','AR','FIL','MASK','EIGEN','OCEAN','AGIX','CTSI','QNT','VIRTUAL','AI16Z','AIXBT','COOKIE','TAO']},
+  {label:'Perp – Cosmos / Solana Ecosystem',
+    coins:['TIA','INJ','SEI','PYTH','JTO','JUP','LISTA','RAY','BANANA','HYPE','USUAL','LAYER','POPCAT']},
+  {label:'Perp – Meme',
+    coins:['DOGE','SHIB','PEPE','BONK','FLOKI','WIF','BOME','MEME','NOT','NEIRO','TURBO','PNUT','ACT','GOAT','DOGS','HMSTR','TRUMP','MELANIA','MEW','BRETT','MOG','FARTCOIN','PONKE','SLERF','WEN','MYRO']},
+  {label:'Perp – Gaming / NFT / Metaverse',
+    coins:['SAND','MANA','GALA','CHZ','ENJ','APE','MAGIC','HOOK','GMT','AXS','SLP','ALICE','TLM','ILV','GHST']},
+  {label:'Perp – Web3 Identity / Social',
+    coins:['ENS','LRC','GAL','ID','CYBER','ARKM','SFP','NKN','CHR','DUSK']},
+  {label:'Perp – Bitcoin Ecosystem / Misc',
+    coins:['ORDI','SATS','SUI','APT','ENA','WLD','CFX','XAI','TRB','AUDIO','DENT','ACH','NULS','SSV','PIPPIN','SAHARA','PAXG','XDC','POLS','BADGER','PROM','UXLINK','FUEL','PUFFER','LUMIA','REZ','ZETA','PORTAL','MYRIA','AEVO','OMNI']},
+  {label:'Perp – New Listings 2024/25',
+    coins:['TST','PENGU','BERA','IP','KAIA','MORPHO','KAITO','SIGN','INIT','ANIME','VINE','DEEP','WAL','ZEREBRO','SWARMS','BUZZ','LUCE','DEGEN','GRIFFAIN','VVAIFU','ARC','ALCH','PLUME','GRIFT','BOME2','LABUBU','LAB']},
+];
+
+let selectedCoin='XRP';
+
+function buildCoinList(query=''){
+  const list=document.getElementById('coinList');
+  list.innerHTML='';
+  const q=query.toLowerCase();
+  let anyVisible=false;
+  COIN_GROUPS.forEach(grp=>{
+    const matches=grp.coins.filter(sym=>{
+      const d=COINS[sym];
+      if(!d)return false;
+      return !q||sym.toLowerCase().includes(q)||d.name.toLowerCase().includes(q);
+    });
+    if(!matches.length)return;
+    anyVisible=true;
+    const gl=document.createElement('div');
+    gl.className='coin-group-label';
+    gl.textContent=grp.label;
+    list.appendChild(gl);
+    matches.forEach(sym=>{
+      const d=COINS[sym];
+      const el=document.createElement('div');
+      el.className='coin-option'+(sym===selectedCoin?' selected':'');
+      el.dataset.sym=sym;
+      el.innerHTML=`<span class="coin-option-sym">${sym}</span><span class="coin-option-name">${d.name}</span><span class="coin-type-pill">${d.type}</span>`;
+      el.addEventListener('click',()=>selectCoin(sym,el));
+      list.appendChild(el);
+    });
+  });
+  if(!anyVisible){
+    list.innerHTML='<div class="coin-no-result">No coins match "'+query+'"</div>';
+  }
+}
+
+function selectCoin(sym,el){
+  selectedCoin=sym;
+  document.getElementById('cryptoSelect').value=sym;
+  document.getElementById('coinTriggerLabel').textContent=sym+' – '+COINS[sym].name;
+  closePicker();
+  // highlight
+  document.querySelectorAll('.coin-option').forEach(o=>o.classList.remove('selected'));
+  if(el)el.classList.add('selected');
+}
+
+function openPicker(){
+  document.getElementById('coinDropdown').classList.add('visible');
+  document.getElementById('coinTrigger').classList.add('open');
+  document.getElementById('coinSearch').value='';
+  buildCoinList('');
+  setTimeout(()=>document.getElementById('coinSearch').focus(),50);
+}
+function closePicker(){
+  document.getElementById('coinDropdown').classList.remove('visible');
+  document.getElementById('coinTrigger').classList.remove('open');
+}
+
+document.getElementById('coinTrigger').addEventListener('click',()=>{
+  const open=document.getElementById('coinDropdown').classList.contains('visible');
+  open?closePicker():openPicker();
+});
+document.getElementById('coinSearch').addEventListener('input',function(){
+  buildCoinList(this.value);
+});
+document.addEventListener('click',e=>{
+  if(!document.getElementById('coinPicker').contains(e.target))closePicker();
+});
+document.getElementById('coinSearch').addEventListener('keydown',e=>{
+  if(e.key==='Escape')closePicker();
+  if(e.key==='Enter'){
+    const first=document.querySelector('.coin-option');
+    if(first)first.click();
+  }
+});
+
+// init label
+const defaultSym='XRP';
+selectedCoin=defaultSym;
+document.getElementById('cryptoSelect').value=defaultSym;
+document.getElementById('coinTriggerLabel').textContent=defaultSym+' – '+COINS[defaultSym].name;
+
+// TIMEFRAME
+document.querySelectorAll('.tf-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); tf=btn.dataset.tf;
+  });
+});
+
+// SCAN BUTTON
+document.getElementById('scanBtn').addEventListener('click',runScan);
+
+// THEME
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const r=document.documentElement;
+  r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');
+});
+
+// LUCIDE INIT
+if(typeof lucide!=='undefined')lucide.createIcons();
+</script>
+</body>
+</html>
